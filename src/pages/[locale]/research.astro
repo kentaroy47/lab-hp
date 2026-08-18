@@ -7,6 +7,7 @@ import Icon from "../../components/Icon.astro";
 import { site } from "../../data/site";
 import { researchThemes } from "../../data/research";
 import { facilities } from "../../data/highlights";
+import { categoryOf, categoryLabels, themeCategory } from "../../data/projectCategories";
 import { locales, t, type Locale } from "../../i18n/strings";
 import mainVisual from "../../assets/main.webp";
 import edgeVisual from "../../assets/edge.webp";
@@ -38,49 +39,22 @@ const visuals: Record<string, { src: ImageMetadata; fit: "contain" | "cover"; po
 };
 
 /**
- * Which projects illustrate each theme, plus the filter the "see all" link opens
- * on the projects page. `filter` uses the same vocabulary as the buttons there,
- * and `countFilter` counts what that link will actually show, so the number in
- * the label matches the result.
+ * Each theme is backed by one project category, so the "see all" link filters the
+ * projects page to exactly the set counted here.
  */
 const allProjects = await getCollection("projects");
-type Project = (typeof allProjects)[number];
-
-const themeProjects: Record<
-  string,
-  { match: (p: Project) => boolean; filter: string; countFilter: (p: Project) => boolean; label: { ja: string; en: string } }
-> = {
-  "edge-computing": {
-    match: (p) => p.data.section === "Circuit",
-    filter: "section:Circuit",
-    countFilter: (p) => p.data.section === "Circuit",
-    label: { ja: "回路の研究", en: "circuit projects" },
-  },
-  "autonomous-driving-security": {
-    match: (p) => p.data.section === "Sensor" && p.data.tags.includes("Security"),
-    filter: "tag:Security",
-    countFilter: (p) => p.data.tags.includes("Security"),
-    label: { ja: "セキュリティの研究", en: "security projects" },
-  },
-  "lidar-3d-sensing": {
-    match: (p) => p.data.section === "Sensor" && !p.data.tags.includes("Security"),
-    filter: "tag:LiDAR",
-    countFilter: (p) => p.data.tags.includes("LiDAR"),
-    label: { ja: "LiDARの研究", en: "LiDAR projects" },
-  },
-};
+const themeMatches = (slug: string) => allProjects.filter((p) => categoryOf(p) === themeCategory[slug]);
 
 /** Flagship projects first, then newest. */
 const pickProjects = (slug: string) =>
-  allProjects
-    .filter(themeProjects[slug].match)
+  [...themeMatches(slug)]
     .sort((a, b) => {
       if (a.data.highlight !== b.data.highlight) return a.data.highlight ? -1 : 1;
       return b.data.year - a.data.year;
     })
     .slice(0, 3);
 
-const countProjects = (slug: string) => allProjects.filter(themeProjects[slug].countFilter).length;
+const countProjects = (slug: string) => themeMatches(slug).length;
 
 const description = ja
   ? "CSGの研究テーマ：エッジコンピューティング（インメモリAI・アナログ計算）、自動運転セキュリティ（LiDAR脆弱性・防御）、LiDAR 3Dセンシング（医療・スポーツ応用）。"
@@ -212,12 +186,12 @@ const description = ja
               {ja ? "実際に発表した成果" : "What came out of it"}
             </h3>
             <a
-              href={`${base}/${locale}/projects?filter=${encodeURIComponent(themeProjects[theme.slug].filter)}`}
+              href={`${base}/${locale}/projects?filter=category:${themeCategory[theme.slug]}`}
               class="text-sm font-bold text-coral-600 hover:underline"
             >
               {ja
-                ? `${themeProjects[theme.slug].label.ja}${countProjects(theme.slug)}件をすべて見る`
-                : `See all ${countProjects(theme.slug)} ${themeProjects[theme.slug].label.en}`} →
+                ? `${categoryLabels[themeCategory[theme.slug]].ja}の${countProjects(theme.slug)}件をすべて見る`
+                : `See all ${countProjects(theme.slug)} ${categoryLabels[themeCategory[theme.slug]].en.toLowerCase()}`} →
             </a>
           </div>
 

@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "../../../layouts/Layout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import Icon from "../../../components/Icon.astro";
+import { categoryOf, categoryLabels, type ProjectCategory } from "../../../data/projectCategories";
 import { locales, t, type Locale } from "../../../i18n/strings";
 
 export function getStaticPaths() {
@@ -21,18 +22,25 @@ const projects = all.sort((a, b) => {
   return (a.data.order ?? 99) - (b.data.order ?? 99);
 });
 
-const sections = [...new Set(projects.map((p) => p.data.section))];
-const allTags = [...new Set(projects.flatMap((p) => p.data.tags))].sort();
+/** Four choices instead of fourteen: a highlights view plus the three research themes. */
+const filters = [
+  { key: "all", label: { ja: "すべて", en: "All" }, count: projects.length },
+  {
+    key: "highlight",
+    label: { ja: "注目", en: "Highlights" },
+    count: projects.filter((p) => p.data.highlight).length,
+  },
+  ...(["computing", "security", "sensing"] as ProjectCategory[]).map((c) => ({
+    key: `category:${c}`,
+    label: categoryLabels[c],
+    count: projects.filter((p) => categoryOf(p) === c).length,
+  })),
+];
 
 const statusLabels: Record<string, { ja: string; en: string; cls: string }> = {
   published: { ja: "発表済み", en: "Published", cls: "bg-paper-300/70 text-navy-700" },
   accepted: { ja: "採択", en: "Accepted", cls: "bg-coral-300/30 text-coral-600" },
   preprint: { ja: "プレプリント", en: "Preprint", cls: "bg-sky-200/70 text-navy-700" },
-};
-
-const sectionLabels: Record<string, { ja: string; en: string }> = {
-  Circuit: { ja: "回路", en: "Circuit" },
-  Sensor: { ja: "センサ", en: "Sensor" },
 };
 
 const description = ja
@@ -52,26 +60,17 @@ const description = ja
   <!-- Filters -->
   <section class="sticky top-16 z-40 border-b border-navy-900/8 bg-paper-100/90 backdrop-blur-xl">
     <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-5 py-4">
-      <button type="button" data-filter="all" class="filter-btn rounded-full bg-navy-800 px-3.5 py-1.5 text-xs font-bold text-paper-50 transition-colors">
-        {ja ? "すべて" : "All"}
-      </button>
-      {sections.map((sec) => (
+      {filters.map((f, i) => (
         <button
           type="button"
-          data-filter={`section:${sec}`}
-          class="filter-btn rounded-full bg-paper-300/60 px-3.5 py-1.5 text-xs font-bold text-navy-700 transition-colors hover:bg-paper-300"
+          data-filter={f.key}
+          class:list={[
+            "filter-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors",
+            i === 0 ? "bg-navy-800 text-paper-50" : "bg-paper-300/60 text-navy-700 hover:bg-paper-300",
+          ]}
         >
-          {ja ? sectionLabels[sec].ja : sectionLabels[sec].en}
-        </button>
-      ))}
-      <span class="mx-1 h-4 w-px bg-navy-900/12"></span>
-      {allTags.map((tag) => (
-        <button
-          type="button"
-          data-filter={`tag:${tag}`}
-          class="filter-btn rounded-full bg-paper-300/60 px-3.5 py-1.5 text-xs font-medium text-navy-700 transition-colors hover:bg-paper-300"
-        >
-          {tag}
+          {ja ? f.label.ja : f.label.en}
+          <span class="font-mono text-[11px] font-medium opacity-60">{f.count}</span>
         </button>
       ))}
     </div>
@@ -83,8 +82,8 @@ const description = ja
         <a
           href={`${base}/${locale}/projects/${p.id}`}
           class="project-card paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1"
-          data-section={p.data.section}
-          data-tags={p.data.tags.join(",")}
+          data-category={categoryOf(p)}
+          data-highlight={p.data.highlight ? "true" : "false"}
         >
           {p.data.teaser && (
             <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8 bg-paper-200/60">
@@ -148,10 +147,10 @@ const description = ja
     let visible = 0;
     cards.forEach((card) => {
       let show = true;
-      if (filter.startsWith("section:")) {
-        show = card.dataset.section === filter.slice(8);
-      } else if (filter.startsWith("tag:")) {
-        show = (card.dataset.tags ?? "").split(",").includes(filter.slice(4));
+      if (filter === "highlight") {
+        show = card.dataset.highlight === "true";
+      } else if (filter.startsWith("category:")) {
+        show = card.dataset.category === filter.slice(9);
       }
       card.classList.toggle("hidden", !show);
       if (show) visible++;

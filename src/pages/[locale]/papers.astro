@@ -36,6 +36,23 @@ const typeLabels: Record<string, { ja: string; en: string }> = {
 const sorted = [...publications].sort((a, b) => b.year - a.year);
 const byType = (type: string) => sorted.filter((p) => p.type === type);
 
+const years = [...new Set(publications.map((p) => p.year))].sort((a, b) => b - a);
+const awardCount = publications.filter((p) => p.award).length;
+
+/**
+ * The page is long, so the primary filter picks a kind of record. "受賞" spans
+ * both the awards list and the papers that won something, which is what someone
+ * looking for awards actually wants to see.
+ */
+const kinds = [
+  { key: "all", label: { ja: "すべて", en: "All" }, count: null },
+  { key: "papers", label: { ja: "論文", en: "Papers" }, count: publications.length },
+  { key: "awards", label: { ja: "受賞", en: "Awards" }, count: awards.length + awardCount },
+  { key: "grants", label: { ja: "研究費", en: "Grants" }, count: grants.length },
+  { key: "media", label: { ja: "メディア", en: "Media" }, count: mediaCoverage.length },
+  { key: "patents", label: { ja: "特許", en: "Patents" }, count: null },
+];
+
 const description = ja
   ? "CSGの発表論文一覧。ISSCC・JSSC・NDSS・CVPR・ICCV・IROS・ICRAなどのトップ会議・論文誌に50報以上を発表しています。"
   : "Publications from CSG — over 50 papers at top venues including ISSCC, JSSC, NDSS, CVPR, ICCV, IROS, and ICRA.";
@@ -50,36 +67,82 @@ const description = ja
       : "Over 50 papers, including 5 at ISSCC and 9 in JSSC — the top conference and journal in integrated circuits. We also publish at top venues in security, AI, robotics, and medical image analysis, and hold over 30 patents."}
   />
 
-  <!-- Filters -->
+  <!-- Kind picks the sections shown; category and year then refine the papers. -->
   <section class="sticky top-16 z-40 border-b border-navy-900/8 bg-paper-100/90 backdrop-blur-xl">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-5 py-4">
-      <span class="mr-1 text-xs font-bold uppercase tracking-widest text-navy-500">Filter</span>
-      {Object.entries(categoryLabels).map(([key, label]) => (
-        <button
-          type="button"
-          data-filter={key}
-          class:list={[
-            "filter-btn rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors",
-            key === "all" ? "bg-navy-800 text-paper-50" : "bg-paper-300/60 text-navy-700 hover:bg-paper-300",
-          ]}
-        >
-          {ja ? label.ja : label.en}
+    <div class="mx-auto max-w-6xl px-5 py-4">
+      <div class="flex flex-wrap items-center gap-2">
+        {kinds.map((k) => (
+          <button
+            type="button"
+            data-kind={k.key}
+            class:list={[
+              "kind-btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors",
+              k.key === "all" ? "bg-navy-800 text-paper-50" : "bg-paper-300/60 text-navy-700 hover:bg-paper-300",
+            ]}
+          >
+            {ja ? k.label.ja : k.label.en}
+            {k.count !== null && <span class="font-mono text-[11px] font-medium opacity-60">{k.count}</span>}
+          </button>
+        ))}
+
+        <button type="button" id="reset-filter" class="ml-auto hidden text-xs font-bold text-coral-600 hover:underline">
+          {ja ? "条件をクリア" : "Clear"}
         </button>
-      ))}
+      </div>
+
+      <!-- Refinements, only meaningful while papers are on screen -->
+      <div id="paper-refine" class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-navy-900/8 pt-3">
+        {Object.entries(categoryLabels).map(([key, label]) => (
+          <button
+            type="button"
+            data-category={key}
+            class:list={[
+              "cat-btn rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
+              key === "all" ? "bg-navy-800 text-paper-50" : "bg-paper-300/60 text-navy-700 hover:bg-paper-300",
+            ]}
+          >
+            {ja ? label.ja : label.en}
+          </button>
+        ))}
+
+        <span class="mx-1 hidden h-4 w-px bg-navy-900/12 sm:block"></span>
+
+        <label class="inline-flex items-center gap-2">
+          <span class="text-xs font-bold text-navy-500">{ja ? "年" : "Year"}</span>
+          <select
+            id="year-filter"
+            class="rounded-full border border-navy-900/12 bg-paper-50 px-3 py-1.5 text-xs font-bold text-navy-700"
+          >
+            <option value="all">{ja ? "すべて" : "All"}</option>
+            {years.map((y) => (
+              <option value={y}>{y}</option>
+            ))}
+          </select>
+        </label>
+      </div>
     </div>
   </section>
 
+  <p id="pub-empty" class="mx-auto hidden max-w-6xl px-5 pt-10 text-center text-navy-500">
+    {ja ? "条件に合う論文がありません。" : "No publications match these filters."}
+  </p>
+
   <div class="mx-auto max-w-6xl px-5 py-16 md:py-20">
     {["journal", "conference"].map((type) => (
-      <section class="mb-16">
+      <section class="kind-section pub-section mb-16" data-kind="papers">
         <h2 class="text-2xl font-bold tracking-tight text-navy-900">
           {ja ? typeLabels[type].ja : typeLabels[type].en}
-          <span class="ml-3 font-mono text-sm font-medium text-navy-500">{byType(type).length}</span>
+          <span class="pub-count ml-3 font-mono text-sm font-medium text-navy-500">{byType(type).length}</span>
         </h2>
 
         <ul class="mt-7 space-y-3">
           {byType(type).map((p: Publication) => (
-            <li class="pub-item paper-card rounded-2xl bg-paper-50 p-6" data-category={p.category}>
+            <li
+              class="pub-item paper-card rounded-2xl bg-paper-50 p-6"
+              data-category={p.category}
+              data-year={p.year}
+              data-award={p.award ? "true" : "false"}
+            >
               <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <span class="font-mono text-xs font-bold text-coral-600">{p.year}</span>
                 <span class="rounded-full bg-paper-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-700">
@@ -125,7 +188,7 @@ const description = ja
     ))}
 
     <!-- Awards -->
-    <section class="mb-16">
+    <section class="kind-section mb-16" data-kind="awards">
       <h2 class="flex items-center gap-3 text-2xl font-bold tracking-tight text-navy-900">
         <span class="grid h-10 w-10 place-items-center rounded-xl bg-sand-300/50 text-navy-700">
           <Icon name="award" class="h-5 w-5" />
@@ -147,7 +210,7 @@ const description = ja
     </section>
 
     <!-- Grants -->
-    <section class="mb-16">
+    <section class="kind-section mb-16" data-kind="grants">
       <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "競争的資金" : "Grants and funding"}</h2>
       <ul class="mt-7 space-y-3">
         {grants.map((g) => (
@@ -173,7 +236,7 @@ const description = ja
     </section>
 
     <!-- Media -->
-    <section class="mb-16">
+    <section class="kind-section mb-16" data-kind="media">
       <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "メディア掲載" : "Media coverage"}</h2>
       <ul class="mt-7 grid gap-3 md:grid-cols-2">
         {mediaCoverage.map((m) => (
@@ -189,7 +252,7 @@ const description = ja
     </section>
 
     <!-- Patents -->
-    <section>
+    <section class="kind-section" data-kind="patents">
       <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "特許" : "Patents"}</h2>
       <p class="mt-4 text-navy-600">
         {ja
@@ -210,27 +273,95 @@ const description = ja
 </Layout>
 
 <script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+  const kindButtons = document.querySelectorAll<HTMLButtonElement>(".kind-btn");
+  const catButtons = document.querySelectorAll<HTMLButtonElement>(".cat-btn");
+  const yearSelect = document.getElementById("year-filter") as HTMLSelectElement | null;
+  const resetButton = document.getElementById("reset-filter") as HTMLButtonElement | null;
+  const refine = document.getElementById("paper-refine");
+  const empty = document.getElementById("pub-empty");
   const items = document.querySelectorAll<HTMLElement>(".pub-item");
-  const active = ["bg-navy-800", "text-paper-50"];
-  const idle = ["bg-paper-300/60", "text-navy-700", "hover:bg-paper-300"];
+  const sections = document.querySelectorAll<HTMLElement>(".kind-section");
 
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const filter = btn.dataset.filter!;
+  const state = { kind: "all", category: "all", year: "all" };
 
-      buttons.forEach((b) => {
-        const on = b === btn;
-        b.classList.toggle("bg-navy-800", on);
-        b.classList.toggle("text-paper-50", on);
-        b.classList.toggle("bg-paper-300/60", !on);
-        b.classList.toggle("text-navy-700", !on);
-      });
+  /** Which record kinds each section belongs to. "awards" also covers award-winning papers. */
+  function sectionVisible(sectionKind: string) {
+    if (state.kind === "all") return true;
+    if (state.kind === "awards") return sectionKind === "awards" || sectionKind === "papers";
+    return sectionKind === state.kind;
+  }
 
-      items.forEach((item) => {
-        const show = filter === "all" || item.dataset.category === filter;
-        item.classList.toggle("hidden", !show);
-      });
+  function paint(buttons: NodeListOf<HTMLButtonElement>, attr: string, value: string) {
+    buttons.forEach((b) => {
+      const on = b.dataset[attr] === value;
+      b.classList.toggle("bg-navy-800", on);
+      b.classList.toggle("text-paper-50", on);
+      b.classList.toggle("bg-paper-300/60", !on);
+      b.classList.toggle("text-navy-700", !on);
     });
+  }
+
+  function apply() {
+    paint(kindButtons, "kind", state.kind);
+    paint(catButtons, "category", state.category);
+
+    // Refinements only apply to papers, so hide them when papers aren't shown.
+    const papersOnScreen = state.kind === "all" || state.kind === "papers" || state.kind === "awards";
+    refine?.classList.toggle("hidden", !papersOnScreen);
+
+    let visiblePapers = 0;
+    items.forEach((item) => {
+      const show =
+        (state.category === "all" || item.dataset.category === state.category) &&
+        (state.year === "all" || item.dataset.year === state.year) &&
+        (state.kind !== "awards" || item.dataset.award === "true");
+      item.classList.toggle("hidden", !show);
+      if (show) visiblePapers++;
+    });
+
+    sections.forEach((section) => {
+      const kind = section.dataset.kind!;
+      let show = sectionVisible(kind);
+      if (show && section.classList.contains("pub-section")) {
+        // A publication section disappears once every paper in it is filtered out.
+        const visible = section.querySelectorAll(".pub-item:not(.hidden)").length;
+        show = visible > 0;
+        const count = section.querySelector(".pub-count");
+        if (count) count.textContent = String(visible);
+      }
+      section.classList.toggle("hidden", !show);
+    });
+
+    empty?.classList.toggle("hidden", !(papersOnScreen && visiblePapers === 0));
+
+    const filtering = state.kind !== "all" || state.category !== "all" || state.year !== "all";
+    resetButton?.classList.toggle("hidden", !filtering);
+  }
+
+  kindButtons.forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.kind = btn.dataset.kind!;
+      apply();
+    }),
+  );
+
+  catButtons.forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.category = btn.dataset.category!;
+      apply();
+    }),
+  );
+
+  yearSelect?.addEventListener("change", () => {
+    state.year = yearSelect.value;
+    apply();
+  });
+
+  resetButton?.addEventListener("click", () => {
+    state.kind = "all";
+    state.category = "all";
+    state.year = "all";
+    if (yearSelect) yearSelect.value = "all";
+    apply();
   });
 </script>
