@@ -74,6 +74,10 @@ npx astro dev logs      # ログ
 同ファイル内に `awards` / `grants` / `sponsors` / `mediaCoverage` / `patentsUrl` もある。
 受賞は**学生本人の受賞**なら `src/data/highlights.ts` の `studentAwards` にも追加すること（Recruit の訴求で使う）。
 
+Papers ページのフィルタは全てこのデータから自動生成される（種類・種別・カテゴリ・年）。
+新しい年の論文を足せば年の選択肢が増え、`award` を書けば「受賞」フィルタに現れる。
+フィルタ側を触る必要はない。
+
 ### プロジェクトを追加する
 
 **`src/content/projects/` に `.md` を置くだけ。** Astro のコンテンツコレクションなので、
