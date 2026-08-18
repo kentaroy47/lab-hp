@@ -1,0 +1,57 @@
+---
+import { Image } from "astro:assets";
+import { t, type Locale } from "../i18n/strings";
+import { site } from "../data/site";
+import logo from "../assets/csg.png";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const s = t(locale);
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const href = (p: string) => `${base}/${locale}${p}`;
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-navy-900/8 bg-paper-200">
+  <div class="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-3">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <Image src={logo} alt="" widths={[44, 88]} sizes="44px" class="h-11 w-auto" />
+        <span class="font-bold tracking-tight text-navy-900">Keio <span class="text-coral-500">CSG</span></span>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-navy-600">
+        {locale === "ja" ? site.affiliation.ja : site.affiliation.en}
+      </p>
+    </div>
+
+    <div>
+      <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">{s.footer.address}</h2>
+      <address class="mt-4 space-y-1 text-sm not-italic leading-relaxed text-navy-600">
+        <p>{site.address.postal}</p>
+        <p>{locale === "ja" ? site.address.ja : site.address.en}</p>
+        <p class="pt-2 text-navy-500">Students: {site.rooms.students}</p>
+        <p class="text-navy-500">PI: {site.rooms.pi}</p>
+      </address>
+      <a href={site.mapUrl} target="_blank" rel="noopener" class="mt-3 inline-block text-sm font-medium text-coral-600 hover:underline">
+        {locale === "ja" ? "矢上キャンパスへのアクセス →" : "Access to Yagami Campus →"}
+      </a>
+    </div>
+
+    <div>
+      <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">{s.footer.contact}</h2>
+      <div class="mt-4 space-y-2 text-sm">
+        <a href={`mailto:${site.email}`} class="block font-medium text-coral-600 hover:underline">{site.email}</a>
+        <a href={site.socials.github} target="_blank" rel="noopener" class="block text-navy-600 hover:text-navy-900">GitHub</a>
+        <a href={site.socials.kaggle} target="_blank" rel="noopener" class="block text-navy-600 hover:text-navy-900">Kaggle</a>
+        <a href={href("/recruit")} class="block text-navy-600 hover:text-navy-900">{s.nav.recruit}</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-navy-900/8 px-5 py-6">
+    <p class="mx-auto max-w-6xl text-xs text-navy-500">© {year} {s.footer.rights}</p>
+  </div>
+</footer>

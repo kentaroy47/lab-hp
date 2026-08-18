@@ -1,0 +1,246 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
+import { site } from "../../data/site";
+import { recruit } from "../../data/recruit";
+import { whyCsg, studentAwards, careerOutcomes, facilities } from "../../data/highlights";
+import { locales, type Locale } from "../../i18n/strings";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const ja = locale === "ja";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const description = ja
+  ? "慶應理工 吉岡研究室（CSG）の配属を検討している学部3年生・大学院進学希望者へ。研究室説明会の日程、研究テーマ、研究室の文化、先輩の声、FAQを掲載しています。"
+  : "For prospective students considering the Yoshioka Lab (CSG) at Keio: info sessions, research tracks, lab culture, student voices, and FAQ.";
+---
+
+<Layout locale={locale} path="/recruit" title={ja ? "B3学生へ" : "Join us"} description={description}>
+  <PageHero
+    eyebrow="Recruit"
+    title={ja ? "研究室に、入りませんか" : "Come join the lab"}
+    lead={ja
+      ? "配属を検討している学部3年生、大学院からCSGに入りたい方へ。まずは見学に来てください。「配属に興味があるのですが、見学できますか？」だけのメールで大丈夫です。"
+      : "For undergraduates considering lab assignment and prospective graduate students: come visit us. An email as short as \"I'm interested — could I visit?\" is enough."}
+  >
+    <div class="mt-9 flex flex-wrap gap-3">
+      <a
+        href={`mailto:${site.email}`}
+        class="inline-flex items-center gap-2 rounded-xl bg-coral-500 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-coral-600"
+      >
+        <Icon name="mail" class="h-4 w-4" />
+        {site.email}
+      </a>
+      <a
+        href="#sessions"
+        class="rounded-xl border-2 border-navy-800 px-5 py-3 text-sm font-bold text-navy-800 transition-colors hover:bg-navy-800 hover:text-paper-50"
+      >
+        {ja ? "説明会の日程を見る" : "See info sessions"}
+      </a>
+    </div>
+    <p class="mt-5 text-xs text-navy-500">{ja ? `最終更新 ${recruit.updated}` : `Last updated ${recruit.updated}`}</p>
+  </PageHero>
+
+  <!-- Why join -->
+  <section class="border-b border-navy-900/8 bg-paper-200/50">
+    <div class="mx-auto max-w-6xl px-5 py-20">
+      <h2 class="text-3xl font-bold tracking-tight text-navy-900">{ja ? "CSGで、何が得られるか" : "What you get at CSG"}</h2>
+      <div class="mt-11 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {whyCsg.map((h) => (
+          <div class="paper-card flex flex-col rounded-2xl bg-paper-50 p-7">
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-coral-300/25 text-coral-600">
+              <Icon name={h.icon} />
+            </span>
+            <h3 class="mt-5 text-base font-bold tracking-tight text-navy-900">{ja ? h.title.ja : h.title.en}</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600">{ja ? h.body.ja : h.body.en}</p>
+            {h.proof && <p class="mt-5 font-mono text-xs font-medium text-coral-600">{ja ? h.proof.ja : h.proof.en}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Info sessions -->
+  <section id="sessions" class="scroll-mt-20 border-b border-navy-900/8">
+    <div class="mx-auto max-w-6xl px-5 py-20">
+      <h2 class="text-3xl font-bold tracking-tight text-navy-900">
+        {ja ? `${recruit.infoSessions.year}年度 研究室説明会` : `Lab info sessions (${recruit.infoSessions.year})`}
+      </h2>
+
+      <div class="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {recruit.infoSessions.slots.map((slot) => (
+          <div class="paper-card rounded-2xl border-l-4 border-coral-400 bg-paper-50 px-6 py-5">
+            <p class="font-mono text-lg font-bold text-navy-900">{slot}</p>
+          </div>
+        ))}
+      </div>
+
+      <p class="mt-7 max-w-2xl leading-relaxed text-navy-600">
+        {ja ? recruit.infoSessions.note.ja : recruit.infoSessions.note.en}
+      </p>
+    </div>
+  </section>
+
+  <!-- Tracks -->
+  <section class="border-b border-navy-900/8 bg-paper-200/50">
+    <div class="mx-auto max-w-6xl px-5 py-20">
+      <h2 class="text-3xl font-bold tracking-tight text-navy-900">{ja ? "研究テーマ" : "Research tracks"}</h2>
+      <p class="mt-5 max-w-3xl leading-relaxed text-navy-600">{ja ? recruit.tracks.ja : recruit.tracks.en}</p>
+
+      <div class="mt-11 grid gap-6 lg:grid-cols-3">
+        {recruit.ongoingProjects.map((p) => (
+          <div class="paper-card flex flex-col rounded-2xl bg-paper-50 p-7">
+            <h3 class="text-lg font-bold tracking-tight text-navy-900">{ja ? p.title.ja : p.title.en}</h3>
+            <p class="mt-4 flex-1 text-sm leading-relaxed text-navy-600">{ja ? p.body.ja : p.body.en}</p>
+
+            <dl class="mt-6 space-y-2.5 border-t border-navy-900/8 pt-5 text-xs">
+              <div>
+                <dt class="font-bold uppercase tracking-widest text-navy-500">{ja ? "スポンサー" : "Sponsors"}</dt>
+                <dd class="mt-1 text-navy-700">{p.sponsors}</dd>
+              </div>
+              <div>
+                <dt class="font-bold uppercase tracking-widest text-navy-500">{ja ? "共同研究" : "Collaborators"}</dt>
+                <dd class="mt-1 text-navy-700">{p.collaborators}</dd>
+              </div>
+              {p.examples && (
+                <div>
+                  <dt class="font-bold uppercase tracking-widest text-navy-500">{ja ? "成果例" : "Recent output"}</dt>
+                  <dd class="mt-1 font-mono text-navy-700">{p.examples}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Culture + facilities -->
+  <section class="border-b border-navy-900/8">
+    <div class="mx-auto grid max-w-6xl gap-14 px-5 py-20 lg:grid-cols-2">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight text-navy-900">{ja ? "研究室の文化" : "Lab culture"}</h2>
+        <p class="mt-5 leading-relaxed text-navy-600">{ja ? recruit.culture.ja : recruit.culture.en}</p>
+
+        <h3 class="mt-10 text-xs font-bold uppercase tracking-widest text-navy-500">
+          {ja ? "卒業生の進路" : "Career outcomes"}
+        </h3>
+        <ul class="mt-4 flex flex-wrap gap-2">
+          {careerOutcomes.map((c) => (
+            <li
+              class:list={[
+                "rounded-full px-3.5 py-2 text-sm font-medium",
+                c.kind === "academia" ? "bg-navy-800 text-paper-50" : "bg-paper-300/70 text-navy-800",
+              ]}
+            >
+              {c.destination}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight text-navy-900">{ja ? "使える設備" : "What you can use"}</h2>
+        <ul class="mt-7 space-y-3">
+          {facilities.map((f) => (
+            <li class="paper-card flex items-center gap-3 rounded-xl bg-paper-50 px-5 py-4 text-sm font-medium text-navy-800">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-coral-400"></span>
+              {ja ? f.ja : f.en}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Student awards -->
+  <section class="border-b border-navy-900/8 bg-paper-200/50">
+    <div class="mx-auto max-w-6xl px-5 py-20">
+      <h2 class="text-3xl font-bold tracking-tight text-navy-900">{ja ? "学生が獲った賞" : "Awards won by students"}</h2>
+      <p class="mt-3 max-w-2xl text-navy-600">
+        {ja
+          ? "第一著者として評価されるチャンスがあります。学部生・修士でも国際学会で受賞しています。"
+          : "There is real opportunity to be recognized as a first author — undergraduates and master's students win awards at international venues."}
+      </p>
+      <ul class="mt-9 grid gap-3 md:grid-cols-2">
+        {studentAwards.map((a) => (
+          <li class="paper-card flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl bg-paper-50 px-5 py-4">
+            <span class="font-mono text-xs font-bold text-coral-600">{a.year}</span>
+            <span class="text-sm font-bold text-navy-900">{a.name}</span>
+            <span class="text-sm text-navy-600">{ja ? a.award.ja : a.award.en}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Voices -->
+  <section class="border-b border-navy-900/8">
+    <div class="mx-auto max-w-6xl px-5 py-20">
+      <h2 class="text-3xl font-bold tracking-tight text-navy-900">{ja ? "先輩の声" : "Student voices"}</h2>
+
+      <div class="mt-11 space-y-12">
+        {recruit.voices.map((v) => (
+          <div>
+            <h3 class="text-lg font-bold text-navy-900">{ja ? v.q.ja : v.q.en}</h3>
+            <ul class="mt-5 grid gap-3 md:grid-cols-2">
+              {v.a.map((ans) => (
+                <li class="paper-card rounded-2xl bg-paper-50 px-6 py-5 text-sm leading-relaxed text-navy-700">
+                  「{ja ? ans.ja : ans.en}」
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="border-b border-navy-900/8 bg-paper-200/50">
+    <div class="mx-auto max-w-4xl px-5 py-20">
+      <h2 class="text-3xl font-bold tracking-tight text-navy-900">FAQ</h2>
+      <div class="mt-9 space-y-4">
+        {recruit.faq.map((f) => (
+          <details class="paper-card group rounded-2xl bg-paper-50 px-6 py-5">
+            <summary class="flex cursor-pointer items-start gap-3 font-bold text-navy-900 marker:content-['']">
+              <span class="mt-0.5 text-coral-500">Q</span>
+              <span class="flex-1">{ja ? f.q.ja : f.q.en}</span>
+              <span class="mt-1 shrink-0 text-navy-400 transition-transform group-open:rotate-45">＋</span>
+            </summary>
+            <p class="mt-4 border-t border-navy-900/8 pt-4 text-sm leading-relaxed text-navy-600">
+              {ja ? f.a.ja : f.a.en}
+            </p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="mx-auto max-w-6xl px-5 py-20">
+    <div class="relative overflow-hidden rounded-[2rem] bg-navy-800 px-8 py-14 text-center md:px-14">
+      <div class="trace-grid absolute inset-0 opacity-30"></div>
+      <div class="relative">
+        <h2 class="text-3xl font-bold tracking-tight text-paper-50 md:text-4xl">
+          {ja ? "まずは、見学から。" : "Start with a visit."}
+        </h2>
+        <p class="mx-auto mt-5 max-w-xl leading-relaxed text-sky-200">
+          {ja ? recruit.intro.ja : recruit.intro.en}
+        </p>
+        <a
+          href={`mailto:${site.email}`}
+          class="mt-9 inline-flex items-center gap-2 rounded-xl bg-sand-400 px-6 py-3.5 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-300"
+        >
+          <Icon name="mail" class="h-4 w-4" />
+          {site.email}
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

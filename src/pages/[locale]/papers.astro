@@ -1,0 +1,236 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
+import {
+  publications,
+  awards,
+  grants,
+  sponsors,
+  mediaCoverage,
+  patentsUrl,
+  type Publication,
+} from "../../data/publications";
+import { locales, type Locale } from "../../i18n/strings";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const ja = locale === "ja";
+
+const categoryLabels: Record<string, { ja: string; en: string }> = {
+  all: { ja: "すべて", en: "All" },
+  computing: { ja: "コンピューティング", en: "Computing" },
+  sensing: { ja: "センシング", en: "Sensing" },
+  analog: { ja: "アナログ回路", en: "Analog circuits" },
+  review: { ja: "解説・総説", en: "Reviews" },
+};
+
+const typeLabels: Record<string, { ja: string; en: string }> = {
+  journal: { ja: "論文誌", en: "Journal" },
+  conference: { ja: "国際会議", en: "Conference" },
+};
+
+const sorted = [...publications].sort((a, b) => b.year - a.year);
+const byType = (type: string) => sorted.filter((p) => p.type === type);
+
+const description = ja
+  ? "CSGの発表論文一覧。ISSCC・JSSC・NDSS・CVPR・ICCV・IROS・ICRAなどのトップ会議・論文誌に50報以上を発表しています。"
+  : "Publications from CSG — over 50 papers at top venues including ISSCC, JSSC, NDSS, CVPR, ICCV, IROS, and ICRA.";
+---
+
+<Layout locale={locale} path="/papers" title={ja ? "発表論文" : "Papers"} description={description}>
+  <PageHero
+    eyebrow="Papers"
+    title={ja ? "発表論文" : "Publications"}
+    lead={ja
+      ? "集積回路のトップ会議ISSCCに5報、トップ論文誌JSSCに9報を含む計50報以上を発表。セキュリティ、AI、ロボティクス、医療画像解析のトップ会議でも成果を発表しています。特許も30件以上出願・登録しています。"
+      : "Over 50 papers, including 5 at ISSCC and 9 in JSSC — the top conference and journal in integrated circuits. We also publish at top venues in security, AI, robotics, and medical image analysis, and hold over 30 patents."}
+  />
+
+  <!-- Filters -->
+  <section class="sticky top-16 z-40 border-b border-navy-900/8 bg-paper-100/90 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-5 py-4">
+      <span class="mr-1 text-xs font-bold uppercase tracking-widest text-navy-500">Filter</span>
+      {Object.entries(categoryLabels).map(([key, label]) => (
+        <button
+          type="button"
+          data-filter={key}
+          class:list={[
+            "filter-btn rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors",
+            key === "all" ? "bg-navy-800 text-paper-50" : "bg-paper-300/60 text-navy-700 hover:bg-paper-300",
+          ]}
+        >
+          {ja ? label.ja : label.en}
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-6xl px-5 py-16 md:py-20">
+    {["journal", "conference"].map((type) => (
+      <section class="mb-16">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-900">
+          {ja ? typeLabels[type].ja : typeLabels[type].en}
+          <span class="ml-3 font-mono text-sm font-medium text-navy-500">{byType(type).length}</span>
+        </h2>
+
+        <ul class="mt-7 space-y-3">
+          {byType(type).map((p: Publication) => (
+            <li class="pub-item paper-card rounded-2xl bg-paper-50 p-6" data-category={p.category}>
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span class="font-mono text-xs font-bold text-coral-600">{p.year}</span>
+                <span class="rounded-full bg-paper-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-700">
+                  {ja ? categoryLabels[p.category].ja : categoryLabels[p.category].en}
+                </span>
+                {p.accRate && (
+                  <span class="rounded-full bg-sky-200/70 px-2.5 py-0.5 text-[11px] font-medium text-navy-700">
+                    Acc. {p.accRate}
+                  </span>
+                )}
+                {p.award && (
+                  <span class="inline-flex items-center gap-1 rounded-full bg-sand-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-800">
+                    <Icon name="award" class="h-3 w-3" />
+                    {p.award}
+                  </span>
+                )}
+              </div>
+
+              <h3 class="mt-3 font-bold leading-snug text-navy-900">{p.title}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-navy-600">{p.authors}</p>
+              <p class="mt-1 text-sm italic text-navy-500">{p.venue}</p>
+              {p.note && <p class="mt-1.5 text-xs text-navy-500">{p.note}</p>}
+
+              {p.links && (
+                <div class="mt-3 flex flex-wrap gap-3">
+                  {p.links.map((l) => (
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener"
+                      class="inline-flex items-center gap-1.5 text-xs font-bold text-coral-600 hover:underline"
+                    >
+                      {l.label}
+                      <Icon name="external" class="h-3 w-3" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    <!-- Awards -->
+    <section class="mb-16">
+      <h2 class="flex items-center gap-3 text-2xl font-bold tracking-tight text-navy-900">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-sand-300/50 text-navy-700">
+          <Icon name="award" class="h-5 w-5" />
+        </span>
+        {ja ? "受賞" : "Awards"}
+      </h2>
+      <ul class="mt-7 space-y-3">
+        {awards.map((a) => (
+          <li class="paper-card rounded-2xl bg-paper-50 p-6">
+            <div class="flex flex-wrap items-baseline gap-x-3">
+              <span class="font-mono text-xs font-bold text-coral-600">{a.date}</span>
+              <span class="font-bold text-navy-900">{a.title}</span>
+            </div>
+            {a.paper && <p class="mt-2 text-sm leading-relaxed text-navy-600">{a.paper}</p>}
+            <p class="mt-1 text-sm italic text-navy-500">{a.venue}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Grants -->
+    <section class="mb-16">
+      <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "競争的資金" : "Grants and funding"}</h2>
+      <ul class="mt-7 space-y-3">
+        {grants.map((g) => (
+          <li class="paper-card rounded-2xl bg-paper-50 p-6">
+            <h3 class="font-bold leading-snug text-navy-900">{g.title}</h3>
+            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span class="font-mono text-xs text-navy-500">{g.period}</span>
+              <span class="text-navy-600">{g.program}</span>
+              <span class="rounded-full bg-coral-300/25 px-2.5 py-0.5 text-[11px] font-bold text-coral-600">{g.role}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <h3 class="mt-10 text-xs font-bold uppercase tracking-widest text-navy-500">
+        {ja ? "企業共同研究" : "Industry sponsors"}
+      </h3>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {sponsors.map((sp) => (
+          <li class="rounded-full bg-paper-300/70 px-3.5 py-1.5 text-sm font-medium text-navy-800">{sp}</li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Media -->
+    <section class="mb-16">
+      <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "メディア掲載" : "Media coverage"}</h2>
+      <ul class="mt-7 grid gap-3 md:grid-cols-2">
+        {mediaCoverage.map((m) => (
+          <li class="paper-card rounded-2xl bg-paper-50 p-5">
+            <div class="flex items-baseline gap-3">
+              <span class="text-xs font-bold text-coral-600">{m.outlet}</span>
+              {m.date && <span class="font-mono text-xs text-navy-500">{m.date}</span>}
+            </div>
+            <p class="mt-2 text-sm leading-relaxed text-navy-700">{m.title}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Patents -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "特許" : "Patents"}</h2>
+      <p class="mt-4 text-navy-600">
+        {ja
+          ? "集積回路とLiDARシステムに関して30件以上を出願・登録しています。"
+          : "Over 30 patents filed and granted on integrated circuits and LiDAR systems."}
+      </p>
+      <a
+        href={patentsUrl}
+        target="_blank"
+        rel="noopener"
+        class="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-navy-800 px-5 py-2.5 text-sm font-bold text-navy-800 transition-colors hover:bg-navy-800 hover:text-paper-50"
+      >
+        Google Patents
+        <Icon name="external" class="h-3.5 w-3.5" />
+      </a>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+  const items = document.querySelectorAll<HTMLElement>(".pub-item");
+  const active = ["bg-navy-800", "text-paper-50"];
+  const idle = ["bg-paper-300/60", "text-navy-700", "hover:bg-paper-300"];
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const filter = btn.dataset.filter!;
+
+      buttons.forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle("bg-navy-800", on);
+        b.classList.toggle("text-paper-50", on);
+        b.classList.toggle("bg-paper-300/60", !on);
+        b.classList.toggle("text-navy-700", !on);
+      });
+
+      items.forEach((item) => {
+        const show = filter === "all" || item.dataset.category === filter;
+        item.classList.toggle("hidden", !show);
+      });
+    });
+  });
+</script>

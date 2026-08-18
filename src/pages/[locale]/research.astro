@@ -1,0 +1,148 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../../layouts/Layout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
+import { site } from "../../data/site";
+import { researchThemes } from "../../data/research";
+import { facilities } from "../../data/highlights";
+import { locales, t, type Locale } from "../../i18n/strings";
+import mainVisual from "../../assets/main.webp";
+import edgeVisual from "../../assets/edge.webp";
+import healthVisual from "../../assets/health.webp";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const s = t(locale);
+const ja = locale === "ja";
+
+const visuals: Record<string, ImageMetadata> = {
+  "edge-computing": edgeVisual,
+  "autonomous-driving-security": mainVisual,
+  "lidar-3d-sensing": healthVisual,
+};
+
+const description = ja
+  ? "CSGの研究テーマ：エッジコンピューティング（インメモリAI・アナログ計算）、自動運転セキュリティ（LiDAR脆弱性・防御）、LiDAR 3Dセンシング（医療・スポーツ応用）。"
+  : "Research at CSG: edge computing (in-memory AI, analog compute), autonomous driving security (LiDAR vulnerabilities and defenses), and LiDAR 3D sensing for healthcare and sports.";
+---
+
+<Layout locale={locale} path="/research" title={ja ? "研究テーマ" : "Research"} description={description}>
+  <PageHero
+    eyebrow="Research"
+    title={ja ? "研究テーマ" : "Research areas"}
+    lead={ja
+      ? "回路という物理層から、AIというアルゴリズム層まで。CSGは3つの柱を貫いて研究しています。どのテーマも「ハードとソフトの両方」に踏み込むのが特徴です。"
+      : "From the physical layer of circuits up to the algorithmic layer of AI. CSG works across three pillars, and every theme reaches into both hardware and software."}
+  />
+
+  {researchThemes.map((theme, i) => (
+    <section
+      id={theme.slug}
+      class:list={["scroll-mt-20 border-b border-navy-900/8", i % 2 === 1 && "bg-paper-200/50"]}
+    >
+      <div class="mx-auto max-w-6xl px-5 py-20 md:py-24">
+        <div class:list={["grid items-start gap-12 lg:grid-cols-2 lg:gap-16", i % 2 === 1 && "lg:[&>*:first-child]:order-2"]}>
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="grid h-12 w-12 place-items-center rounded-2xl bg-coral-300/25 text-coral-600">
+                <Icon name={theme.icon} />
+              </span>
+              <span class="font-mono text-xs font-medium text-navy-500">0{i + 1}</span>
+            </div>
+
+            <h2 class="mt-5 text-3xl font-bold tracking-tight text-navy-900">{ja ? theme.title.ja : theme.title.en}</h2>
+            <p class="mt-5 leading-relaxed text-navy-600">{ja ? theme.summary.ja : theme.summary.en}</p>
+
+            <h3 class="mt-10 text-xs font-bold uppercase tracking-widest text-navy-500">
+              {ja ? "主要プロジェクト" : "Key projects"}
+            </h3>
+            <ul class="mt-4 space-y-3">
+              {theme.projects.map((p) => (
+                <li class="flex gap-3 text-sm leading-relaxed text-navy-700">
+                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-coral-400"></span>
+                  <span>{ja ? p.ja : p.en}</span>
+                </li>
+              ))}
+            </ul>
+
+            {theme.achievements && (
+              <>
+                <h3 class="mt-9 text-xs font-bold uppercase tracking-widest text-navy-500">
+                  {ja ? "最近の成果" : "Recent results"}
+                </h3>
+                <ul class="mt-4 space-y-3">
+                  {theme.achievements.map((a) => (
+                    <li class="flex gap-3 text-sm leading-relaxed text-navy-700">
+                      <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sand-500"></span>
+                      <span>{ja ? a.text.ja : a.text.en}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {theme.collaborators && (
+              <>
+                <h3 class="mt-9 text-xs font-bold uppercase tracking-widest text-navy-500">
+                  {ja ? "共同研究先" : "Collaborators"}
+                </h3>
+                <ul class="mt-4 flex flex-wrap gap-2">
+                  {theme.collaborators.map((c) => (
+                    <li class="rounded-full bg-paper-300/70 px-3.5 py-1.5 text-xs font-medium text-navy-800">{c}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <a
+              href={`mailto:${site.email}`}
+              class="mt-10 inline-flex items-center gap-2 rounded-xl border-2 border-navy-800 px-5 py-2.5 text-sm font-bold text-navy-800 transition-colors hover:bg-navy-800 hover:text-paper-50"
+            >
+              <Icon name="mail" class="h-4 w-4" />
+              {s.common.contactUs}
+            </a>
+          </div>
+
+          <div class="relative">
+            <div class="absolute -inset-5 rounded-[2.5rem] bg-sand-300/20 blur-2xl"></div>
+            <Image
+              src={visuals[theme.slug]}
+              alt=""
+              widths={[500, 900]}
+              sizes="(min-width: 1024px) 520px, 100vw"
+              class="relative w-full rounded-3xl"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <!-- Facilities -->
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
+    <h2 class="flex items-center gap-3 text-2xl font-bold tracking-tight text-navy-900 md:text-3xl">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-sand-300/50 text-navy-700">
+        <Icon name="flask" class="h-5 w-5" />
+      </span>
+      {ja ? "研究環境・設備" : "Facilities"}
+    </h2>
+    <p class="mt-3 max-w-2xl text-navy-600">
+      {ja
+        ? "シミュレーションだけで終わらせないために、実際に手を動かせる環境を揃えています。"
+        : "So that research doesn't end at simulation, we keep an environment where you can actually build and measure."}
+    </p>
+
+    <ul class="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {facilities.map((f) => (
+        <li class="paper-card flex items-center gap-3 rounded-xl bg-paper-50 px-5 py-4 text-sm font-medium text-navy-800">
+          <span class="h-2 w-2 shrink-0 rounded-full bg-coral-400"></span>
+          {ja ? f.ja : f.en}
+        </li>
+      ))}
+    </ul>
+  </section>
+</Layout>

@@ -1,0 +1,66 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageHero from "../../components/PageHero.astro";
+import { news } from "../../data/news";
+import { locales, type Locale } from "../../i18n/strings";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const ja = locale === "ja";
+
+const tagLabels: Record<string, { ja: string; en: string; cls: string }> = {
+  award: { ja: "受賞", en: "Award", cls: "bg-sand-300/70 text-navy-800" },
+  paper: { ja: "論文", en: "Paper", cls: "bg-coral-300/30 text-coral-600" },
+  grant: { ja: "研究費", en: "Grant", cls: "bg-sky-200/70 text-navy-700" },
+  press: { ja: "プレス", en: "Press", cls: "bg-navy-800 text-paper-50" },
+  lab: { ja: "研究室", en: "Lab", cls: "bg-paper-300 text-navy-700" },
+};
+
+/** Group by year so a long list stays scannable. */
+const byYear = news.reduce<Record<string, typeof news>>((acc, item) => {
+  const year = item.date.slice(0, 4);
+  (acc[year] ??= []).push(item);
+  return acc;
+}, {});
+const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a));
+
+const description = ja
+  ? "CSGのニュース一覧。論文採択、受賞、研究費獲得、プレスリリース、研究室の出来事をお知らせしています。"
+  : "News from CSG: paper acceptances, awards, grants, press releases, and lab happenings.";
+---
+
+<Layout locale={locale} path="/news" title="News" description={description}>
+  <PageHero
+    eyebrow="News"
+    title={ja ? "ニュース" : "News"}
+    lead={ja
+      ? "論文採択、受賞、研究費の獲得、そして研究室の日々の出来事をお知らせしています。"
+      : "Paper acceptances, awards, grants, and everyday moments from the lab."}
+  />
+
+  <div class="mx-auto max-w-4xl px-5 py-16 md:py-20">
+    {years.map((year) => (
+      <section class="mb-14">
+        <h2 class="font-mono text-2xl font-bold text-navy-900">{year}</h2>
+        <ul class="mt-6 space-y-3">
+          {byYear[year].map((item) => (
+            <li class="paper-card rounded-2xl bg-paper-50 px-6 py-5">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <time class="font-mono text-xs font-medium text-coral-600">{item.date}</time>
+                {item.tag && (
+                  <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", tagLabels[item.tag].cls]}>
+                    {ja ? tagLabels[item.tag].ja : tagLabels[item.tag].en}
+                  </span>
+                )}
+              </div>
+              <p class="mt-2.5 text-sm leading-relaxed text-navy-700">{ja ? item.ja : item.en}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Layout>

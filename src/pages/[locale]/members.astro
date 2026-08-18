@@ -1,0 +1,143 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageHero from "../../components/PageHero.astro";
+import MemberCard from "../../components/MemberCard.astro";
+import Icon from "../../components/Icon.astro";
+import {
+  pi,
+  phdStudents,
+  masterStudents,
+  bachelorStudents,
+  researchMembers,
+  staff,
+  alumni,
+} from "../../data/members";
+import { locales, type Locale } from "../../i18n/strings";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const ja = locale === "ja";
+
+const groups = [
+  { title: { ja: "博士課程", en: "Ph.D. students" }, members: phdStudents },
+  { title: { ja: "修士課程", en: "Master's students" }, members: masterStudents },
+  { title: { ja: "学部生", en: "Bachelor students" }, members: bachelorStudents },
+  { title: { ja: "共同研究員", en: "Research members" }, members: researchMembers },
+  { title: { ja: "スタッフ", en: "Staff" }, members: staff },
+];
+
+const totalMembers =
+  1 + phdStudents.length + masterStudents.length + bachelorStudents.length + researchMembers.length + staff.length;
+
+const description = ja
+  ? "CSGのメンバー紹介。PI 吉岡健太郎准教授、博士課程・修士課程・学部生、共同研究員、そして卒業生の進路を掲載しています。"
+  : "Members of CSG: PI Kentaro Yoshioka, Ph.D./master's/bachelor students, research members, and where our alumni went.";
+---
+
+<Layout locale={locale} path="/members" title={ja ? "メンバー" : "Members"} description={description}>
+  <PageHero
+    eyebrow="Members"
+    title={ja ? "メンバー" : "Members"}
+    lead={ja
+      ? `回路チームとセンシングチームに分かれ、現在${totalMembers}名が在籍しています。海外からの留学生も加わり、日々議論しながら研究を進めています。`
+      : `${totalMembers} people currently work across our Circuit and Sensing teams, joined by visiting students from abroad.`}
+  />
+
+  <!-- PI -->
+  <section class="border-b border-navy-900/8 bg-paper-200/50">
+    <div class="mx-auto max-w-6xl px-5 py-16 md:py-20">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">PI</h2>
+
+      <div class="mt-7 grid gap-10 lg:grid-cols-[auto_1fr] lg:gap-14">
+        <div class="flex items-start gap-5">
+          <span class="grid h-24 w-24 shrink-0 place-items-center rounded-3xl bg-navy-800 text-2xl font-bold text-sand-300">
+            KY
+          </span>
+          <div class="lg:hidden">
+            <h3 class="text-2xl font-bold tracking-tight text-navy-900">{pi.name}</h3>
+            <p class="mt-1 text-sm font-medium text-navy-600">{ja ? pi.title.ja : pi.title.en}</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="hidden lg:block">
+            <h3 class="text-2xl font-bold tracking-tight text-navy-900">{pi.name}</h3>
+            <p class="mt-1 text-sm font-medium text-navy-600">{ja ? pi.title.ja : pi.title.en}</p>
+          </div>
+
+          <p class="mt-5 text-lg font-bold text-coral-600">「{ja ? pi.comment.ja : pi.comment.en}」</p>
+
+          <ul class="mt-7 space-y-4">
+            {pi.bio.map((b) => (
+              <li class="grid gap-1.5 sm:grid-cols-[9rem_1fr] sm:gap-5">
+                <span class="font-mono text-xs font-medium text-navy-500">{b.period}</span>
+                <span class="text-sm leading-relaxed text-navy-700">{ja ? b.ja : b.en}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div class="mt-7 flex flex-wrap items-center gap-3">
+            {pi.badges.map((badge) => (
+              <span class="rounded-full bg-sand-300/60 px-3.5 py-1.5 text-xs font-bold text-navy-800">{badge}</span>
+            ))}
+            <a href={pi.links.github} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm font-bold text-coral-600 hover:underline">
+              <Icon name="github" class="h-4 w-4" /> GitHub
+            </a>
+            <a href={pi.links.kaggle} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm font-bold text-coral-600 hover:underline">
+              Kaggle <Icon name="external" class="h-3 w-3" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Member groups -->
+  <div class="mx-auto max-w-6xl px-5 py-16 md:py-20">
+    {groups.map((g) => (
+      <section class="mb-14">
+        <h2 class="text-2xl font-bold tracking-tight text-navy-900">
+          {ja ? g.title.ja : g.title.en}
+          <span class="ml-3 font-mono text-sm font-medium text-navy-500">{g.members.length}</span>
+        </h2>
+        <div class="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {g.members.map((m) => <MemberCard member={m} />)}
+        </div>
+      </section>
+    ))}
+
+    <!-- Alumni -->
+    <section>
+      <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "卒業生" : "Alumni"}</h2>
+      <p class="mt-3 text-navy-600">
+        {ja
+          ? "研究室を巣立ったメンバーの進路です。アカデミアにも企業にも道が開けています。"
+          : "Where our graduates went — paths open both to academia and industry."}
+      </p>
+
+      <ul class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {alumni.map((a) => (
+          <li class="paper-card rounded-2xl bg-paper-50 p-6">
+            <h3 class="font-bold tracking-tight text-navy-900">{a.name}</h3>
+            <p class="mt-1.5 text-sm text-coral-600">{a.destination}</p>
+            <div class="mt-3 flex items-center gap-3">
+              {a.url && (
+                <a href={a.url} target="_blank" rel="noopener" aria-label={`Website of ${a.name}`} class="text-navy-500 hover:text-coral-600">
+                  <Icon name="external" class="h-4 w-4" />
+                </a>
+              )}
+              {a.github && (
+                <a href={a.github} target="_blank" rel="noopener" aria-label={`GitHub of ${a.name}`} class="text-navy-500 hover:text-coral-600">
+                  <Icon name="github" class="h-4 w-4" />
+                </a>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Layout>

@@ -1,0 +1,56 @@
+---
+import Icon from "./Icon.astro";
+import type { Member } from "../data/members";
+
+interface Props {
+  member: Member;
+}
+
+const { member } = Astro.props;
+
+/** Deterministic warm tint per member so the initial avatars form a coherent set. */
+const tints = [
+  "bg-coral-300/35 text-coral-600",
+  "bg-sand-300/50 text-navy-700",
+  "bg-sky-200/70 text-navy-700",
+  "bg-paper-300 text-navy-700",
+];
+const hash = [...member.name].reduce((n, c) => n + c.charCodeAt(0), 0);
+const tint = tints[hash % tints.length];
+const initials = member.name
+  .split(" ")
+  .map((w) => w[0])
+  .slice(0, 2)
+  .join("");
+---
+
+<div class="paper-card flex flex-col rounded-2xl bg-paper-50 p-6">
+  <div class="flex items-center gap-4">
+    <span class:list={["grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-lg font-bold", tint]}>
+      {initials}
+    </span>
+    <div class="min-w-0">
+      <h3 class="truncate font-bold tracking-tight text-navy-900">{member.name}</h3>
+      {member.team && <p class="mt-0.5 text-xs font-medium text-navy-500">{member.team} team</p>}
+    </div>
+  </div>
+
+  {member.comment && (
+    <p class="mt-4 text-sm leading-relaxed text-navy-600">「{member.comment}」</p>
+  )}
+
+  {(member.mail || member.github) && (
+    <div class="mt-4 flex items-center gap-3 pt-1">
+      {member.mail && (
+        <a href={`mailto:${member.mail}`} aria-label={`Email ${member.name}`} class="text-navy-500 transition-colors hover:text-coral-600">
+          <Icon name="mail" class="h-4 w-4" />
+        </a>
+      )}
+      {member.github && (
+        <a href={member.github} target="_blank" rel="noopener" aria-label={`GitHub of ${member.name}`} class="text-navy-500 transition-colors hover:text-coral-600">
+          <Icon name="github" class="h-4 w-4" />
+        </a>
+      )}
+    </div>
+  )}
+</div>

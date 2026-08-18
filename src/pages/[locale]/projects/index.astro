@@ -1,0 +1,57 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import PageHero from "../../../components/PageHero.astro";
+import Icon from "../../../components/Icon.astro";
+import { projects } from "../../../data/projects";
+import { locales, t, type Locale } from "../../../i18n/strings";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const s = t(locale);
+const ja = locale === "ja";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const tagStyles: Record<string, string> = {
+  security: "bg-coral-300/30 text-coral-600",
+  sensing: "bg-sky-200/70 text-navy-700",
+  computing: "bg-sand-300/50 text-navy-700",
+};
+
+const description = ja
+  ? "CSGの研究プロジェクト：Ghost-FWL、Optical LiDAR Communication、BasketLiDAR、LiDARスプーフィング攻撃研究など。"
+  : "Research projects at CSG: Ghost-FWL, Optical LiDAR Communication, BasketLiDAR, and LiDAR spoofing attack research.";
+---
+
+<Layout locale={locale} path="/projects" title={ja ? "プロジェクト" : "Projects"} description={description}>
+  <PageHero
+    eyebrow="Projects"
+    title={ja ? "研究プロジェクト" : "Projects"}
+    lead={ja
+      ? "進行中・発表済みの主要プロジェクトです。データセット公開やデモ動画など、実際に触れる成果も揃えています。"
+      : "Our major ongoing and published projects — including released datasets and demo videos you can actually explore."}
+  />
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
+    <div class="grid gap-7 md:grid-cols-2">
+      {projects.map((p) => (
+        <a
+          href={`${base}/${locale}/projects/${p.slug}`}
+          class="paper-card paper-card-hover group flex flex-col rounded-3xl border border-navy-900/8 bg-paper-50 p-8 transition-all duration-300 hover:-translate-y-1"
+        >
+          <div class="flex flex-wrap items-center gap-2">
+            <span class:list={["rounded-full px-3 py-1 text-xs font-bold", tagStyles[p.tag]]}>{p.tag}</span>
+            {p.venue && <span class="font-mono text-xs text-navy-500">{p.venue}</span>}
+          </div>
+
+          <h2 class="mt-5 text-xl font-bold tracking-tight text-navy-900 group-hover:text-coral-600">{p.title}</h2>
+          {p.subtitle && <p class="mt-2 text-sm font-medium leading-snug text-navy-500">{p.subtitle}</p>}
+          <p class="mt-4 flex-1 text-sm leading-relaxed text-navy-600">{ja ? p.summary.ja : p.summary.en}</p>
+          <span class="mt-6 text-sm font-bold text-coral-600">{s.common.readMore} →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>

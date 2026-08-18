@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kentaroy47.github.io/lab-hp/sitemap-index.xml
