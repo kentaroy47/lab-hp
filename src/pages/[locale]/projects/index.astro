@@ -136,31 +136,43 @@ const description = ja
   const cards = document.querySelectorAll<HTMLElement>(".project-card");
   const empty = document.getElementById("empty-state");
 
+  function apply(filter: string) {
+    buttons.forEach((b) => {
+      const on = b.dataset.filter === filter;
+      b.classList.toggle("bg-navy-800", on);
+      b.classList.toggle("text-paper-50", on);
+      b.classList.toggle("bg-paper-300/60", !on);
+      b.classList.toggle("text-navy-700", !on);
+    });
+
+    let visible = 0;
+    cards.forEach((card) => {
+      let show = true;
+      if (filter.startsWith("section:")) {
+        show = card.dataset.section === filter.slice(8);
+      } else if (filter.startsWith("tag:")) {
+        show = (card.dataset.tags ?? "").split(",").includes(filter.slice(4));
+      }
+      card.classList.toggle("hidden", !show);
+      if (show) visible++;
+    });
+
+    empty?.classList.toggle("hidden", visible > 0);
+  }
+
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const filter = btn.dataset.filter!;
-
-      buttons.forEach((b) => {
-        const on = b === btn;
-        b.classList.toggle("bg-navy-800", on);
-        b.classList.toggle("text-paper-50", on);
-        b.classList.toggle("bg-paper-300/60", !on);
-        b.classList.toggle("text-navy-700", !on);
-      });
-
-      let visible = 0;
-      cards.forEach((card) => {
-        let show = true;
-        if (filter.startsWith("section:")) {
-          show = card.dataset.section === filter.slice(8);
-        } else if (filter.startsWith("tag:")) {
-          show = (card.dataset.tags ?? "").split(",").includes(filter.slice(4));
-        }
-        card.classList.toggle("hidden", !show);
-        if (show) visible++;
-      });
-
-      empty?.classList.toggle("hidden", visible > 0);
+      apply(filter);
+      // Keep the filter in the URL so the view can be linked to and shared.
+      const url = new URL(window.location.href);
+      if (filter === "all") url.searchParams.delete("filter");
+      else url.searchParams.set("filter", filter);
+      history.replaceState(null, "", url);
     });
   });
+
+  // Honour ?filter= on load, so links from the research page land pre-filtered.
+  const requested = new URL(window.location.href).searchParams.get("filter");
+  if (requested && [...buttons].some((b) => b.dataset.filter === requested)) apply(requested);
 </script>

@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import PageHero from "../../components/PageHero.astro";
 import Icon from "../../components/Icon.astro";
@@ -18,23 +19,68 @@ export function getStaticPaths() {
 const locale = Astro.params.locale as Locale;
 const s = t(locale);
 const ja = locale === "ja";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 /**
  * The three illustrations have very different aspect ratios (main is a wide
- * scene, edge and health are tall cutouts), so each sits on a fixed square
- * stage. Cutouts are contained with padding; the wide scene is cropped into
- * its vehicle area so it reads differently from the homepage hero.
+ * scene, edge and health are tall cutouts), so each sits on a fixed stage.
+ * The wide scene is cropped into its vehicle area to differ from the hero.
  */
 const visuals: Record<string, { src: ImageMetadata; fit: "contain" | "cover"; position?: string; tint: string }> = {
-  "edge-computing": { src: edgeVisual, fit: "contain", tint: "from-sky-200/60 to-paper-200" },
+  "edge-computing": { src: edgeVisual, fit: "contain", tint: "from-sky-200/50 to-paper-200/40" },
   "autonomous-driving-security": {
     src: mainVisual,
     fit: "cover",
     position: "28% 42%",
-    tint: "from-coral-300/30 to-paper-200",
+    tint: "from-coral-300/25 to-paper-200/40",
   },
-  "lidar-3d-sensing": { src: healthVisual, fit: "contain", tint: "from-sand-300/40 to-paper-200" },
+  "lidar-3d-sensing": { src: healthVisual, fit: "contain", tint: "from-sand-300/35 to-paper-200/40" },
 };
+
+/**
+ * Which projects illustrate each theme, plus the filter the "see all" link opens
+ * on the projects page. `filter` uses the same vocabulary as the buttons there,
+ * and `countFilter` counts what that link will actually show, so the number in
+ * the label matches the result.
+ */
+const allProjects = await getCollection("projects");
+type Project = (typeof allProjects)[number];
+
+const themeProjects: Record<
+  string,
+  { match: (p: Project) => boolean; filter: string; countFilter: (p: Project) => boolean; label: { ja: string; en: string } }
+> = {
+  "edge-computing": {
+    match: (p) => p.data.section === "Circuit",
+    filter: "section:Circuit",
+    countFilter: (p) => p.data.section === "Circuit",
+    label: { ja: "回路の研究", en: "circuit projects" },
+  },
+  "autonomous-driving-security": {
+    match: (p) => p.data.section === "Sensor" && p.data.tags.includes("Security"),
+    filter: "tag:Security",
+    countFilter: (p) => p.data.tags.includes("Security"),
+    label: { ja: "セキュリティの研究", en: "security projects" },
+  },
+  "lidar-3d-sensing": {
+    match: (p) => p.data.section === "Sensor" && !p.data.tags.includes("Security"),
+    filter: "tag:LiDAR",
+    countFilter: (p) => p.data.tags.includes("LiDAR"),
+    label: { ja: "LiDARの研究", en: "LiDAR projects" },
+  },
+};
+
+/** Flagship projects first, then newest. */
+const pickProjects = (slug: string) =>
+  allProjects
+    .filter(themeProjects[slug].match)
+    .sort((a, b) => {
+      if (a.data.highlight !== b.data.highlight) return a.data.highlight ? -1 : 1;
+      return b.data.year - a.data.year;
+    })
+    .slice(0, 3);
+
+const countProjects = (slug: string) => allProjects.filter(themeProjects[slug].countFilter).length;
 
 const description = ja
   ? "CSGの研究テーマ：エッジコンピューティング（インメモリAI・アナログ計算）、自動運転セキュリティ（LiDAR脆弱性・防御）、LiDAR 3Dセンシング（医療・スポーツ応用）。"
@@ -44,124 +90,236 @@ const description = ja
 <Layout locale={locale} path="/research" title={ja ? "研究テーマ" : "Research"} description={description}>
   <PageHero
     eyebrow="Research"
-    title={ja ? "研究テーマ" : "Research areas"}
+    title={ja ? "私たちが挑んでいる問い" : "The questions we're chasing"}
     lead={ja
-      ? "回路という物理層から、AIというアルゴリズム層まで。CSGは3つの柱を貫いて研究しています。どのテーマも「ハードとソフトの両方」に踏み込むのが特徴です。"
-      : "From the physical layer of circuits up to the algorithmic layer of AI. CSG works across three pillars, and every theme reaches into both hardware and software."}
-  />
+      ? "3つのテーマで研究しています。どれも「ハードとソフトの両方」に踏み込むのが特徴で、予備知識がなくても始められます。まずは問いから読んでみてください。"
+      : "We work across three themes. Each reaches into both hardware and software, and none of them require prior background to start. Begin with the questions."}
+  >
+    <!-- Lead with the questions themselves: they work as both navigation and hook. -->
+    <nav class="mt-10 grid gap-4 md:grid-cols-3">
+      {researchThemes.map((theme, i) => (
+        <a
+          href={`#${theme.slug}`}
+          class="paper-card paper-card-hover group rounded-2xl bg-paper-50 p-6 transition-all duration-300 hover:-translate-y-1"
+        >
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-xs font-bold text-coral-400">0{i + 1}</span>
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-coral-300/25 text-coral-600">
+              <Icon name={theme.icon} class="h-4 w-4" />
+            </span>
+          </div>
+          <p class="mt-4 text-lg font-bold leading-snug tracking-tight text-navy-900 group-hover:text-coral-600">
+            {ja ? theme.hook.ja : theme.hook.en}
+          </p>
+          <p class="mt-3 text-xs font-medium text-navy-500">{ja ? theme.title.ja : theme.title.en}</p>
+        </a>
+      ))}
+    </nav>
+  </PageHero>
 
   {researchThemes.map((theme, i) => (
     <section
       id={theme.slug}
-      class:list={["scroll-mt-20 border-b border-navy-900/8", i % 2 === 1 && "bg-paper-200/50"]}
+      class:list={["scroll-mt-20 border-b border-navy-900/8", i % 2 === 1 && "bg-paper-200/40"]}
     >
       <div class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-        <div class:list={["grid items-start gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-16", i % 2 === 1 && "lg:[&>*:first-child]:order-2"]}>
+        <!-- The question leads; the illustration sits alongside it. -->
+        <div class="grid items-center gap-10 lg:grid-cols-[1fr_18rem] lg:gap-14">
           <div>
             <div class="flex items-center gap-3">
-              <span class="grid h-12 w-12 place-items-center rounded-2xl bg-coral-300/25 text-coral-600">
-                <Icon name={theme.icon} />
-              </span>
-              <span class="font-mono text-xs font-medium text-navy-500">0{i + 1}</span>
+              <span class="font-mono text-sm font-bold text-coral-400">0{i + 1}</span>
+              <span class="text-sm font-bold text-navy-500">{ja ? theme.title.ja : theme.title.en}</span>
             </div>
 
-            <h2 class="mt-5 text-3xl font-bold tracking-tight text-navy-900">{ja ? theme.title.ja : theme.title.en}</h2>
-            <p class="mt-5 leading-relaxed text-navy-600">{ja ? theme.summary.ja : theme.summary.en}</p>
-
-            <h3 class="mt-10 text-xs font-bold uppercase tracking-widest text-navy-500">
-              {ja ? "主要プロジェクト" : "Key projects"}
-            </h3>
-            <ul class="mt-4 space-y-3">
-              {theme.projects.map((p) => (
-                <li class="flex gap-3 text-sm leading-relaxed text-navy-700">
-                  <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-coral-400"></span>
-                  <span>{ja ? p.ja : p.en}</span>
-                </li>
-              ))}
-            </ul>
-
-            {theme.achievements && (
-              <>
-                <h3 class="mt-9 text-xs font-bold uppercase tracking-widest text-navy-500">
-                  {ja ? "最近の成果" : "Recent results"}
-                </h3>
-                <ul class="mt-4 space-y-3">
-                  {theme.achievements.map((a) => (
-                    <li class="flex gap-3 text-sm leading-relaxed text-navy-700">
-                      <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sand-500"></span>
-                      <span>{ja ? a.text.ja : a.text.en}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-
-            {theme.collaborators && (
-              <>
-                <h3 class="mt-9 text-xs font-bold uppercase tracking-widest text-navy-500">
-                  {ja ? "共同研究先" : "Collaborators"}
-                </h3>
-                <ul class="mt-4 flex flex-wrap gap-2">
-                  {theme.collaborators.map((c) => (
-                    <li class="rounded-full bg-paper-300/70 px-3.5 py-1.5 text-xs font-medium text-navy-800">{c}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-
-            <a
-              href={`mailto:${site.email}`}
-              class="mt-10 inline-flex items-center gap-2 rounded-xl border-2 border-navy-800 px-5 py-2.5 text-sm font-bold text-navy-800 transition-colors hover:bg-navy-800 hover:text-paper-50"
-            >
-              <Icon name="mail" class="h-4 w-4" />
-              {s.common.contactUs}
-            </a>
+            <h2 class="mt-5 max-w-2xl text-3xl font-bold leading-tight tracking-tight text-navy-900 md:text-[2.75rem]">
+              {ja ? theme.hook.ja : theme.hook.en}
+            </h2>
           </div>
 
           <div
             class:list={[
-              "relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-[2rem] bg-gradient-to-br lg:sticky lg:top-24",
+              "relative mx-auto aspect-square w-full max-w-[16rem] overflow-hidden rounded-[2rem] bg-gradient-to-br",
               visuals[theme.slug].tint,
             ]}
           >
             <Image
               src={visuals[theme.slug].src}
               alt=""
-              widths={[380, 760]}
-              sizes="(min-width: 1024px) 380px, 90vw"
+              widths={[280, 560]}
+              sizes="(min-width: 1024px) 280px, 70vw"
               style={visuals[theme.slug].position ? `object-position: ${visuals[theme.slug].position}` : undefined}
               class:list={[
                 "h-full w-full",
-                visuals[theme.slug].fit === "contain" ? "object-contain p-8" : "object-cover",
+                visuals[theme.slug].fit === "contain" ? "object-contain p-6" : "object-cover",
               ]}
             />
           </div>
         </div>
+
+        <!-- Plain-language explanation: generous measure, larger type, no jargon. -->
+        <div class="mt-10 max-w-3xl space-y-5 border-l-4 border-coral-300 pl-6 md:pl-8">
+          {(ja ? theme.plain.ja : theme.plain.en).split("\n\n").map((para) => (
+            <p class="text-base leading-loose text-navy-700 md:text-lg">{para}</p>
+          ))}
+        </div>
+
+        <!-- The question a prospective student actually has: what would I be doing? -->
+        <div class="mt-14 rounded-3xl bg-paper-50 p-8 md:p-10">
+          <h3 class="text-lg font-bold tracking-tight text-navy-900">
+            {ja ? "配属されたら、こんなことをします" : "What you'd actually be doing"}
+          </h3>
+
+          <ol class="mt-7 grid gap-5 sm:grid-cols-2">
+            {theme.whatYouDo.map((w, n) => (
+              <li class="flex gap-4">
+                <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-coral-300/30 font-mono text-xs font-bold text-coral-600">
+                  {n + 1}
+                </span>
+                <p class="text-sm leading-relaxed text-navy-700">{ja ? w.ja : w.en}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div class="mt-8 flex flex-wrap items-center gap-2 border-t border-navy-900/8 pt-6">
+            <span class="mr-1 text-xs font-bold uppercase tracking-widest text-navy-500">
+              {ja ? "身につくもの" : "You'll learn"}
+            </span>
+            {theme.keywords.map((k) => (
+              <span class="rounded-full bg-paper-200 px-3 py-1 text-xs font-medium text-navy-700">{k}</span>
+            ))}
+          </div>
+        </div>
+
+        <!-- Concrete research directions, as a compact grid rather than a stacked list. -->
+        <div class="mt-14">
+          <h3 class="text-lg font-bold tracking-tight text-navy-900">
+            {ja ? "取り組んでいること" : "What we're working on"}
+          </h3>
+          <div class="mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2">
+            {theme.projects.map((p) => (
+              <div class="flex gap-4">
+                <span class="mt-2 h-1.5 w-6 shrink-0 rounded-full bg-coral-400"></span>
+                <p class="text-sm leading-relaxed text-navy-700">{ja ? p.ja : p.en}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Representative work, pulled from the actual project collection. -->
+        <div class="mt-14">
+          <div class="flex flex-wrap items-baseline justify-between gap-3">
+            <h3 class="text-lg font-bold tracking-tight text-navy-900">
+              {ja ? "実際に発表した成果" : "What came out of it"}
+            </h3>
+            <a
+              href={`${base}/${locale}/projects?filter=${encodeURIComponent(themeProjects[theme.slug].filter)}`}
+              class="text-sm font-bold text-coral-600 hover:underline"
+            >
+              {ja
+                ? `${themeProjects[theme.slug].label.ja}${countProjects(theme.slug)}件をすべて見る`
+                : `See all ${countProjects(theme.slug)} ${themeProjects[theme.slug].label.en}`} →
+            </a>
+          </div>
+
+          <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {pickProjects(theme.slug).map((p) => (
+              <a
+                href={`${base}/${locale}/projects/${p.id}`}
+                class="paper-card paper-card-hover group flex flex-col overflow-hidden rounded-2xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1"
+              >
+                {p.data.teaser && (
+                  <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8 bg-paper-200/60">
+                    <img
+                      src={`${base}/projects/${p.data.teaser}`}
+                      alt=""
+                      loading="lazy"
+                      class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+                <div class="flex flex-1 flex-col p-5">
+                  <span class="font-mono text-[11px] font-bold text-coral-600">
+                    {p.data.venue} {p.data.year}
+                  </span>
+                  <h4 class="mt-2 text-sm font-bold leading-snug tracking-tight text-navy-900 group-hover:text-coral-600">
+                    {p.data.short_title}
+                  </h4>
+                  <p class="mt-2 flex-1 text-xs leading-relaxed text-navy-600 line-clamp-3">
+                    {ja ? p.data.description_ja : p.body?.trim().split("\n").join(" ")}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {theme.collaborators && (
+          <div class="mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-navy-900/8 pt-8">
+            <span class="text-xs font-bold uppercase tracking-widest text-navy-500">
+              {ja ? "共同研究先" : "With"}
+            </span>
+            {theme.collaborators.map((c) => (
+              <span class="text-sm text-navy-700">{c}</span>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   ))}
 
   <!-- Facilities -->
-  <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-    <h2 class="flex items-center gap-3 text-2xl font-bold tracking-tight text-navy-900 md:text-3xl">
-      <span class="grid h-10 w-10 place-items-center rounded-xl bg-sand-300/50 text-navy-700">
-        <Icon name="flask" class="h-5 w-5" />
-      </span>
-      {ja ? "研究環境・設備" : "Facilities"}
-    </h2>
-    <p class="mt-3 max-w-2xl text-navy-600">
-      {ja
-        ? "シミュレーションだけで終わらせないために、実際に手を動かせる環境を揃えています。"
-        : "So that research doesn't end at simulation, we keep an environment where you can actually build and measure."}
-    </p>
+  <section class="border-b border-navy-900/8">
+    <div class="mx-auto max-w-6xl px-5 py-20 md:py-24">
+      <div class="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+        <div>
+          <h2 class="flex items-center gap-3 text-2xl font-bold tracking-tight text-navy-900 md:text-3xl">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-sand-300/50 text-navy-700">
+              <Icon name="flask" class="h-5 w-5" />
+            </span>
+            {ja ? "研究環境" : "Facilities"}
+          </h2>
+          <p class="mt-4 leading-relaxed text-navy-600">
+            {ja
+              ? "シミュレーションだけで終わらせないために、実際に手を動かせる環境を揃えています。設計した回路は本当に製造され、攻撃手法は本当の車両で検証されます。"
+              : "So research doesn't end at simulation, we keep an environment where you actually build and measure. Circuits you design get fabricated; attacks you devise get tested on real vehicles."}
+          </p>
+        </div>
 
-    <ul class="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {facilities.map((f) => (
-        <li class="paper-card flex items-center gap-3 rounded-xl bg-paper-50 px-5 py-4 text-sm font-medium text-navy-800">
-          <span class="h-2 w-2 shrink-0 rounded-full bg-coral-400"></span>
-          {ja ? f.ja : f.en}
-        </li>
-      ))}
-    </ul>
+        <ul class="grid gap-3 sm:grid-cols-2">
+          {facilities.map((f) => (
+            <li class="paper-card flex items-center gap-3 rounded-xl bg-paper-50 px-5 py-4 text-sm font-medium text-navy-800">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-coral-400"></span>
+              {ja ? f.ja : f.en}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Single CTA, rather than repeating one per theme -->
+  <section class="mx-auto max-w-6xl px-5 py-20">
+    <div class="relative overflow-hidden rounded-[2rem] bg-navy-800 px-8 py-12 md:px-14">
+      <div class="trace-grid absolute inset-0 opacity-30"></div>
+      <div class="relative flex flex-wrap items-center justify-between gap-8">
+        <div class="max-w-xl">
+          <h2 class="text-2xl font-bold tracking-tight text-paper-50 md:text-3xl">
+            {ja ? "共同研究のご相談" : "Work with us"}
+          </h2>
+          <p class="mt-4 leading-relaxed text-sky-200">
+            {ja
+              ? "企業との受託研究・共同研究を受け付けています。研究内容の詳細や、テーマのご相談もお気軽にどうぞ。"
+              : "We take on contract and collaborative research with industry. Feel free to reach out about our work or to discuss a topic."}
+          </p>
+        </div>
+        <a
+          href={`mailto:${site.email}`}
+          class="inline-flex items-center gap-2 rounded-xl bg-sand-400 px-5 py-3 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-300"
+        >
+          <Icon name="mail" class="h-4 w-4" />
+          {site.email}
+        </a>
+      </div>
+    </div>
   </section>
 </Layout>
