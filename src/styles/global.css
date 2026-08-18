@@ -89,7 +89,40 @@ body {
   animation: float 7s ease-in-out infinite;
 }
 
+/* A slow pass of light across the hero art, echoing a LiDAR sweep */
+@keyframes scan {
+  0% { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+  12% { opacity: 1; }
+  60% { opacity: 0.75; }
+  100% { transform: translateX(320%) skewX(-12deg); opacity: 0; }
+}
+
+.animate-scan {
+  animation: scan 9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Sections fade up as they enter the viewport; JS adds .is-visible */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise, .animate-float { animation: none; }
+  .animate-rise,
+  .animate-float,
+  .animate-scan {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
   html { scroll-behavior: auto; }
 }

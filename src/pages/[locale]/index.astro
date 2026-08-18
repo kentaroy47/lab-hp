@@ -1,11 +1,14 @@
 ---
 import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import Icon from "../../components/Icon.astro";
+import ProjectTeaser from "../../components/ProjectTeaser.astro";
 import { site } from "../../data/site";
 import { researchThemes } from "../../data/research";
 import { news, newsTagLabels } from "../../data/news";
-import { whyCsg, studentAwards, careerOutcomes, openSource } from "../../data/highlights";
+import { whyCsg, studentAwards } from "../../data/highlights";
+import { categoryOf } from "../../data/projectCategories";
 import { locales, t, type Locale } from "../../i18n/strings";
 import mainVisual from "../../assets/main.webp";
 import edgeVisual from "../../assets/edge.webp";
@@ -27,14 +30,22 @@ const themeVisuals: Record<string, ImageMetadata> = {
   "lidar-3d-sensing": healthVisual,
 };
 
-const latestNews = news.slice(0, 6);
-const venueHighlights = ["ISSCC", "NDSS", "CVPR", "ICCV", "IROS", "ICRA", "ICCAD", "JSSC"];
+const latestNews = news.slice(0, 5);
+const venueHighlights = ["ISSCC", "NDSS", "CVPR", "ICCV", "IROS", "ICRA", "ICCAD", "JSSC", "TVLSI", "ASP-DAC"];
+
+/** Counters animate from zero, so the value is split into number and suffix. */
 const stats = [
-  { value: "50+", label: ja ? "発表論文" : "Publications" },
-  { value: "30+", label: ja ? "特許出願・登録" : "Patents" },
-  { value: "9", label: ja ? "JSSC 論文" : "JSSC papers" },
-  { value: "5", label: ja ? "ISSCC 論文" : "ISSCC papers" },
+  { to: 50, suffix: "+", label: ja ? "発表論文" : "Publications" },
+  { to: 30, suffix: "+", label: ja ? "特許出願・登録" : "Patents" },
+  { to: 9, suffix: "", label: ja ? "JSSC 論文" : "JSSC papers" },
+  { to: 5, suffix: "", label: ja ? "ISSCC 論文" : "ISSCC papers" },
 ];
+
+const allProjects = await getCollection("projects");
+const featured = allProjects
+  .filter((p) => p.data.highlight)
+  .sort((a, b) => b.data.year - a.data.year)
+  .slice(0, 3);
 
 const description = ja
   ? "慶應義塾大学 吉岡研究室 (Computing and Sensing Group)。エッジコンピューティング、自動運転セキュリティ、LiDAR 3Dセンシングの研究を通じ、世界を変革する技術に取り組んでいます。"
@@ -43,96 +54,122 @@ const description = ja
 
 <Layout locale={locale} path="" title="Home" description={description}>
   <!-- Hero -->
-  <section class="relative overflow-hidden bg-gradient-to-b from-sky-200/50 via-paper-100 to-paper-100">
-    <div class="trace-grid absolute inset-0 opacity-70"></div>
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-sky-200/55 via-paper-100 to-sand-300/30"></div>
+    <div class="trace-grid absolute inset-0 opacity-60"></div>
 
-    <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-5 py-16 md:py-24 lg:grid-cols-[1fr_1.05fr] lg:gap-8">
-      <div>
-        <p class="animate-rise inline-flex items-center gap-2 rounded-full border border-coral-400/40 bg-coral-300/20 px-3.5 py-1.5 text-xs font-semibold text-coral-600">
-          <span class="h-1.5 w-1.5 rounded-full bg-coral-500"></span>
-          {ja ? "慶應義塾大学 理工学部 吉岡研究室" : "Yoshioka Lab · Keio University"}
-        </p>
+    <div class="relative mx-auto max-w-6xl px-5 pt-14 md:pt-20">
+      <div class="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
+        <div>
+          <p class="animate-rise inline-flex items-center gap-2 rounded-full border border-coral-400/40 bg-paper-50/80 px-3.5 py-1.5 text-xs font-bold text-coral-600 backdrop-blur">
+            <span class="relative flex h-2 w-2">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-coral-400 opacity-70"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-coral-500"></span>
+            </span>
+            {ja ? "慶應義塾大学 理工学部 吉岡研究室" : "Yoshioka Lab · Keio University"}
+          </p>
 
-        <h1 class="animate-rise mt-6 text-4xl font-bold leading-[1.2] tracking-tight text-navy-900 sm:text-5xl">
-          {ja ? (
-            <>最先端の<span class="text-coral-500">回路とセンシング</span>で、<br class="hidden sm:block" />世界を変革する。</>
-          ) : (
-            <>Transforming the world with <span class="text-coral-500">circuits and sensing</span>.</>
-          )}
-        </h1>
+          <h1
+            class="animate-rise mt-6 font-bold leading-[1.08] tracking-tight text-navy-900"
+            style="font-size: clamp(2.5rem, 6.4vw, 4.25rem)"
+          >
+            {ja ? (
+              <>
+                最先端の<span class="relative whitespace-nowrap">
+                  <span class="relative z-10 text-coral-500">回路とセンシング</span>
+                  <span class="absolute inset-x-0 bottom-1 z-0 h-3 bg-sand-300/70"></span>
+                </span>で、<br />世界を変革する。
+              </>
+            ) : (
+              <>
+                Transforming the world<br />with <span class="relative whitespace-nowrap">
+                  <span class="relative z-10 text-coral-500">circuits and sensing</span>
+                  <span class="absolute inset-x-0 bottom-1 z-0 h-3 bg-sand-300/70"></span>
+                </span>.
+              </>
+            )}
+          </h1>
 
-        <p class="animate-rise mt-6 max-w-xl text-base leading-relaxed text-navy-600 md:text-lg">
-          {ja
-            ? "自動運転車、作業用ロボット、遠隔医療。かつてSF映画の世界だった技術を、現実のものにする。Computing and Sensing Group は、その最前線で研究しています。"
-            : "Autonomous vehicles, working robots, remote healthcare — technologies once confined to science fiction. The Computing and Sensing Group works at the frontier that makes them real."}
-        </p>
+          <p class="animate-rise mt-7 max-w-xl text-base leading-relaxed text-navy-600 md:text-lg">
+            {ja
+              ? "自動運転車、作業用ロボット、遠隔医療。かつてSF映画の世界だった技術を、現実のものにする。Computing and Sensing Group は、その最前線で研究しています。"
+              : "Autonomous vehicles, working robots, remote healthcare — technologies once confined to science fiction. The Computing and Sensing Group works at the frontier that makes them real."}
+          </p>
 
-        <div class="animate-rise mt-9 flex flex-wrap gap-3">
-          <a href={href("/research")} class="rounded-xl bg-coral-500 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-coral-600">
-            {ja ? "研究内容を見る" : "Explore our research"}
-          </a>
-          <a href={href("/recruit")} class="rounded-xl border-2 border-navy-800 px-5 py-3 text-sm font-bold text-navy-800 transition-colors hover:bg-navy-800 hover:text-paper-50">
-            {ja ? "研究室に参加する" : "Join the lab"}
-          </a>
+          <div class="animate-rise mt-9 flex flex-wrap gap-3">
+            <a href={href("/research")} class="rounded-xl bg-coral-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-coral-500/25 transition-all hover:-translate-y-0.5 hover:bg-coral-600">
+              {ja ? "研究内容を見る" : "Explore our research"}
+            </a>
+            <a href={href("/recruit")} class="rounded-xl border-2 border-navy-800 px-6 py-3.5 text-sm font-bold text-navy-800 transition-all hover:-translate-y-0.5 hover:bg-navy-800 hover:text-paper-50">
+              {ja ? "研究室に参加する" : "Join the lab"}
+            </a>
+          </div>
+        </div>
+
+        <div class="animate-rise relative">
+          <div class="absolute -inset-8 rounded-full bg-sand-300/25 blur-3xl"></div>
+          <div class="relative overflow-hidden rounded-[2rem] shadow-[0_40px_80px_-40px_rgba(20,36,63,0.55)]">
+            <Image
+              src={mainVisual}
+              alt={ja
+                ? "回路基板の上で暮らす人々、自動運転車、ロボットを描いたイラスト"
+                : "Illustration of people, autonomous vehicles and robots living atop a circuit board"}
+              widths={[640, 1000, 1400]}
+              sizes="(min-width: 1024px) 640px, 100vw"
+              loading="eager"
+              class="w-full"
+            />
+            <!-- A slow sweep of light across the scene -->
+            <div class="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-scan bg-gradient-to-r from-transparent via-white/45 to-transparent"></div>
+          </div>
         </div>
       </div>
 
-      <div class="animate-rise relative">
-        <div class="absolute -inset-6 rounded-[2.5rem] bg-sand-300/25 blur-2xl"></div>
-        <Image
-          src={mainVisual}
-          alt={ja ? "回路基板の上で暮らす人々、自動運転車、ロボットを描いたイラスト" : "Illustration of people, autonomous vehicles and robots living atop a circuit board"}
-          widths={[560, 900, 1400]}
-          sizes="(min-width: 1024px) 620px, 100vw"
-          loading="eager"
-          class="relative w-full rounded-3xl shadow-[0_30px_70px_-30px_rgba(20,36,63,0.45)]"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- Stats + venues -->
-  <section class="border-y border-navy-900/8 bg-paper-50">
-    <div class="mx-auto max-w-6xl px-5 py-12">
-      <dl class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+      <!-- Stats strip closes the opening screen -->
+      <dl class="mt-14 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-navy-900/10 pt-10 pb-14 sm:grid-cols-4">
         {stats.map((stat) => (
           <div>
-            <dt class="text-3xl font-bold tracking-tight text-coral-500 md:text-4xl">{stat.value}</dt>
-            <dd class="mt-1 text-xs font-medium text-navy-500">{stat.label}</dd>
+            <dt class="flex items-baseline text-4xl font-bold tracking-tight text-navy-900 md:text-5xl">
+              <span class="stat-num tabular-nums" data-to={stat.to}>0</span>
+              <span class="text-coral-500">{stat.suffix}</span>
+            </dt>
+            <dd class="mt-1.5 text-xs font-medium text-navy-500">{stat.label}</dd>
           </div>
         ))}
       </dl>
-
-      <div class="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 border-t border-navy-900/8 pt-8">
-        <span class="text-xs font-bold uppercase tracking-widest text-navy-500">
-          {ja ? "主な発表先" : "Published at"}
-        </span>
-        {venueHighlights.map((v) => (
-          <span class="font-mono text-sm text-navy-600">{v}</span>
-        ))}
-      </div>
     </div>
   </section>
 
-  <!-- Research themes -->
+  <!-- Venue marquee -->
+  <section class="border-y border-navy-900/8 bg-navy-800">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-7 gap-y-2 px-5 py-5">
+      <span class="text-xs font-bold uppercase tracking-widest text-sand-300">
+        {ja ? "主な発表先" : "Published at"}
+      </span>
+      {venueHighlights.map((v) => (
+        <span class="font-mono text-sm text-sky-200">{v}</span>
+      ))}
+    </div>
+  </section>
+
+  <!-- Research: lead with the questions -->
   <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+    <div class="reveal flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h2 class="text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">{ja ? "研究分野" : "Research areas"}</h2>
-        <p class="mt-3 max-w-xl text-navy-600">
-          {ja
-            ? "回路からアルゴリズムまで、ハードとソフトを貫く3つの柱で研究を進めています。"
-            : "Three pillars spanning hardware and software, from circuits up to algorithms."}
-        </p>
+        <p class="text-xs font-bold uppercase tracking-widest text-coral-600">Research</p>
+        <h2 class="mt-3 text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">
+          {ja ? "私たちが挑んでいる問い" : "The questions we're chasing"}
+        </h2>
       </div>
       <a href={href("/research")} class="text-sm font-bold text-coral-600 hover:underline">{s.common.viewAll} →</a>
     </div>
 
-    <div class="mt-12 grid gap-7 md:grid-cols-3">
-      {researchThemes.map((theme) => (
+    <div class="mt-12 grid gap-6 md:grid-cols-3">
+      {researchThemes.map((theme, i) => (
         <a
           href={`${href("/research")}#${theme.slug}`}
-          class="paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1"
+          class="reveal paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1.5"
+          style={`transition-delay: ${i * 90}ms`}
         >
           <div class="relative aspect-4/3 overflow-hidden bg-gradient-to-br from-sky-200/60 to-paper-200">
             <Image
@@ -142,165 +179,186 @@ const description = ja
               sizes="(min-width: 768px) 380px, 100vw"
               class="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
             />
+            <span class="absolute left-4 top-4 grid h-9 w-9 place-items-center rounded-xl bg-paper-50/90 text-coral-600 backdrop-blur">
+              <Icon name={theme.icon} class="h-4.5 w-4.5" />
+            </span>
           </div>
           <div class="flex flex-1 flex-col p-7">
-            <h3 class="text-lg font-bold tracking-tight text-navy-900">{ja ? theme.title.ja : theme.title.en}</h3>
-            <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600">
+            <p class="text-lg font-bold leading-snug tracking-tight text-navy-900 group-hover:text-coral-600">
+              {ja ? theme.hook.ja : theme.hook.en}
+            </p>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600 line-clamp-3">
               {ja ? theme.summary.ja : theme.summary.en}
             </p>
-            <span class="mt-5 text-sm font-bold text-coral-600">{s.common.readMore} →</span>
+            <span class="mt-5 text-xs font-bold uppercase tracking-widest text-navy-500">
+              {ja ? theme.title.ja : theme.title.en}
+            </span>
           </div>
         </a>
       ))}
     </div>
   </section>
 
-  <!-- Why CSG: what a student actually gets -->
-  <section class="border-y border-navy-900/8 bg-paper-200/60">
+  <!-- Featured projects -->
+  <section class="border-y border-navy-900/8 bg-paper-200/50">
     <div class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-      <h2 class="text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">
-        {ja ? "CSGで、何が得られるか" : "What you get at CSG"}
-      </h2>
-      <p class="mt-3 max-w-2xl text-navy-600">
-        {ja
-          ? "論文を書くだけの研究室ではありません。学部3年生・修士から入る人が、ここで何を経験できるかを具体的に書きました。"
-          : "This is not a lab where you only write papers. Here is concretely what you will experience if you join as an undergraduate or master's student."}
-      </p>
+      <div class="reveal flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-coral-600">Projects</p>
+          <h2 class="mt-3 text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">
+            {ja ? "注目の研究" : "Featured work"}
+          </h2>
+        </div>
+        <a href={href("/projects")} class="text-sm font-bold text-coral-600 hover:underline">{s.common.viewAll} →</a>
+      </div>
 
-      <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {whyCsg.map((h) => (
-          <div class="paper-card flex flex-col rounded-2xl bg-paper-50 p-7">
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-coral-300/25 text-coral-600">
-              <Icon name={h.icon} />
-            </span>
-            <h3 class="mt-5 text-base font-bold tracking-tight text-navy-900">{ja ? h.title.ja : h.title.en}</h3>
-            <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600">{ja ? h.body.ja : h.body.en}</p>
-            {h.proof && (
-              <p class="mt-5 font-mono text-xs font-medium text-coral-600">{ja ? h.proof.ja : h.proof.en}</p>
-            )}
-          </div>
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        {featured.map((p, i) => (
+          <a
+            href={`${base}/${locale}/projects/${p.id}`}
+            class="reveal paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1.5"
+            style={`transition-delay: ${i * 90}ms`}
+          >
+            <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8">
+              <ProjectTeaser
+                title={p.data.short_title}
+                venue={p.data.venue}
+                year={p.data.year}
+                category={categoryOf(p)}
+                seed={p.id}
+                class="h-full w-full transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="flex flex-1 flex-col p-6">
+              <h3 class="font-bold leading-snug tracking-tight text-navy-900 group-hover:text-coral-600">
+                {p.data.short_title}
+              </h3>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600 line-clamp-3">
+                {ja ? p.data.description_ja : p.body?.trim().split("\n").join(" ")}
+              </p>
+            </div>
+          </a>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- Student awards + career outcomes -->
+  <!-- Why CSG -->
   <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-    <div class="grid gap-12 lg:grid-cols-[1.3fr_1fr]">
-      <div>
-        <h2 class="flex items-center gap-3 text-2xl font-bold tracking-tight text-navy-900 md:text-3xl">
-          <span class="grid h-10 w-10 place-items-center rounded-xl bg-sand-300/50 text-navy-700">
-            <Icon name="award" class="h-5 w-5" />
+    <div class="reveal">
+      <p class="text-xs font-bold uppercase tracking-widest text-coral-600">Why CSG</p>
+      <h2 class="mt-3 text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">
+        {ja ? "CSGで、何が得られるか" : "What you get at CSG"}
+      </h2>
+      <p class="mt-4 max-w-2xl text-navy-600">
+        {ja
+          ? "論文を書くだけの研究室ではありません。学部3年生・修士から入る人が、ここで何を経験できるかを具体的に書きました。"
+          : "This is not a lab where you only write papers. Here is concretely what you will experience if you join as an undergraduate or master's student."}
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {whyCsg.map((h, i) => (
+        <div class="reveal paper-card flex flex-col rounded-2xl bg-paper-50 p-7" style={`transition-delay: ${(i % 3) * 90}ms`}>
+          <span class="grid h-11 w-11 place-items-center rounded-xl bg-coral-300/25 text-coral-600">
+            <Icon name={h.icon} />
           </span>
-          {ja ? "学生が獲った賞" : "Awards won by students"}
-        </h2>
-        <p class="mt-3 text-navy-600">
-          {ja
-            ? "受賞しているのは教員だけではありません。学生一人ひとりが第一著者として評価されています。"
-            : "It isn't only the PI who gets recognized — students are honored as first authors in their own right."}
-        </p>
-
-        <ul class="mt-8 space-y-2.5">
-          {studentAwards.map((a) => (
-            <li class="paper-card flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl bg-paper-50 px-5 py-4">
-              <span class="font-mono text-xs font-medium text-coral-600">{a.year}</span>
-              <span class="text-sm font-bold text-navy-900">{ja ? a.name.ja : a.name.en}</span>
-              <span class="text-sm text-navy-600">{ja ? a.award.ja : a.award.en}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div class="space-y-10">
-        <div>
-          <h2 class="text-xl font-bold tracking-tight text-navy-900">{ja ? "卒業生の進路" : "Where alumni go"}</h2>
-          <ul class="mt-5 flex flex-wrap gap-2">
-            {careerOutcomes.map((c) => (
-              <li
-                class:list={[
-                  "rounded-full px-3.5 py-2 text-sm font-medium",
-                  c.kind === "academia" ? "bg-navy-800 text-paper-50" : "bg-paper-300/70 text-navy-800",
-                ]}
-              >
-                {c.destination}
-              </li>
-            ))}
-          </ul>
+          <h3 class="mt-5 text-base font-bold tracking-tight text-navy-900">{ja ? h.title.ja : h.title.en}</h3>
+          <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600">{ja ? h.body.ja : h.body.en}</p>
+          {h.proof && (
+            <p class="mt-5 font-mono text-xs font-medium text-coral-600">{ja ? h.proof.ja : h.proof.en}</p>
+          )}
         </div>
-
-        <div>
-          <h2 class="flex items-center gap-2.5 text-xl font-bold tracking-tight text-navy-900">
-            <Icon name="github" class="h-5 w-5" />
-            {ja ? "公開しているコード" : "Open source"}
-          </h2>
-          <p class="mt-3 text-sm leading-relaxed text-navy-600">
-            {ja
-              ? "研究成果はGitHubで公開しています。在学中に世界中から参照されるコードを残せます。"
-              : "We release our work on GitHub — you can leave behind code that researchers worldwide build on."}
-          </p>
-          <ul class="mt-5 space-y-2">
-            {openSource.map((o) => (
-              <li>
-                <a href={o.href} target="_blank" rel="noopener" class="group flex items-baseline gap-3">
-                  <span class="font-mono text-sm font-bold text-navy-900 group-hover:text-coral-600">{o.name}</span>
-                  <span class="text-xs text-navy-500">{ja ? o.desc.ja : o.desc.en}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      ))}
     </div>
   </section>
 
-  <!-- News -->
-  <section class="border-y border-navy-900/8 bg-paper-200/60">
+  <!-- Student awards -->
+  <section class="border-y border-navy-900/8 bg-paper-200/50">
     <div class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <h2 class="text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">News</h2>
-        <a href={href("/news")} class="text-sm font-bold text-coral-600 hover:underline">{s.common.viewAll} →</a>
+      <div class="reveal flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="flex items-center gap-3 text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-sand-300/60 text-navy-700">
+              <Icon name="award" class="h-5 w-5" />
+            </span>
+            {ja ? "学生が獲った賞" : "Awards won by students"}
+          </h2>
+          <p class="mt-4 max-w-2xl text-navy-600">
+            {ja
+              ? "受賞しているのは教員だけではありません。学生一人ひとりが第一著者として評価されています。"
+              : "It isn't only the PI who gets recognized — students are honored as first authors in their own right."}
+          </p>
+        </div>
+        <a href={href("/papers")} class="text-sm font-bold text-coral-600 hover:underline">{s.common.viewAll} →</a>
       </div>
 
-      <ul class="mt-10 space-y-3">
-        {latestNews.map((item) => (
-          <li class="paper-card flex flex-col gap-2 rounded-2xl bg-paper-50 px-6 py-5 sm:flex-row sm:items-baseline sm:gap-6">
-            <div class="flex shrink-0 items-center gap-3 sm:w-40">
-              <time class="font-mono text-xs font-medium text-coral-600">{item.date}</time>
-              {item.tag && (
-                <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", newsTagLabels[item.tag].cls]}>
-                  {ja ? newsTagLabels[item.tag].ja : newsTagLabels[item.tag].en}
-                </span>
-              )}
-            </div>
-            <p class="text-sm leading-relaxed text-navy-700">{ja ? item.ja : item.en}</p>
+      <ul class="mt-11 grid gap-3 md:grid-cols-2">
+        {studentAwards.map((a, i) => (
+          <li
+            class="reveal paper-card flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-xl bg-paper-50 px-5 py-4"
+            style={`transition-delay: ${(i % 2) * 70}ms`}
+          >
+            <span class="font-mono text-xs font-bold text-coral-600">{a.year}</span>
+            <span class="text-sm font-bold text-navy-900">{ja ? a.name.ja : a.name.en}</span>
+            <span class="text-sm text-navy-600">{ja ? a.award.ja : a.award.en}</span>
           </li>
         ))}
       </ul>
     </div>
   </section>
 
-  <!-- Recruit CTA -->
+  <!-- News -->
   <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-    <div class="relative overflow-hidden rounded-[2rem] bg-navy-800 px-8 py-14 md:px-14">
+    <div class="reveal flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-coral-600">News</p>
+        <h2 class="mt-3 text-3xl font-bold tracking-tight text-navy-900 md:text-4xl">
+          {ja ? "最近の出来事" : "What's new"}
+        </h2>
+      </div>
+      <a href={href("/news")} class="text-sm font-bold text-coral-600 hover:underline">{s.common.viewAll} →</a>
+    </div>
+
+    <ul class="reveal mt-10 space-y-3">
+      {latestNews.map((item) => (
+        <li class="paper-card flex flex-col gap-2 rounded-2xl bg-paper-50 px-6 py-5 sm:flex-row sm:items-baseline sm:gap-6">
+          <div class="flex shrink-0 items-center gap-3 sm:w-40">
+            <time class="font-mono text-xs font-medium text-coral-600">{item.date}</time>
+            {item.tag && (
+              <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", newsTagLabels[item.tag].cls]}>
+                {ja ? newsTagLabels[item.tag].ja : newsTagLabels[item.tag].en}
+              </span>
+            )}
+          </div>
+          <p class="text-sm leading-relaxed text-navy-700">{ja ? item.ja : item.en}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- Recruit CTA -->
+  <section class="mx-auto max-w-6xl px-5 pb-24">
+    <div class="reveal relative overflow-hidden rounded-[2rem] bg-navy-800 px-8 py-14 md:px-14 md:py-16">
       <div class="trace-grid absolute inset-0 opacity-30"></div>
-      <div class="absolute -right-10 -top-16 hidden w-72 opacity-90 lg:block">
-        <Image src={healthVisual} alt="" widths={[300, 560]} sizes="288px" class="animate-float w-full" />
+      <div class="absolute -right-12 -top-20 hidden w-80 opacity-90 lg:block">
+        <Image src={healthVisual} alt="" widths={[320, 640]} sizes="320px" class="animate-float w-full" />
       </div>
 
       <div class="relative max-w-2xl">
-        <h2 class="text-3xl font-bold tracking-tight text-paper-50 md:text-4xl">
+        <h2 class="text-3xl font-bold tracking-tight text-paper-50 md:text-5xl">
           {ja ? "慶應から、世界へ。" : "From Keio to the world."}
         </h2>
-        <p class="mt-5 leading-relaxed text-sky-200">
+        <p class="mt-6 leading-relaxed text-sky-200">
           {ja
             ? "学部3年生の研究室見学は大歓迎です。博士課程の学生、ポスドク、そして企業との共同研究も募集しています。まずは気軽にメールをください。"
             : "We welcome lab visits from undergraduates, and we're recruiting Ph.D. students, post-docs, and industry collaborations. Feel free to reach out."}
         </p>
         <div class="mt-9 flex flex-wrap gap-3">
-          <a href={`mailto:${site.email}`} class="rounded-xl bg-sand-400 px-5 py-3 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-300">
+          <a href={`mailto:${site.email}`} class="rounded-xl bg-sand-400 px-6 py-3.5 text-sm font-bold text-navy-900 transition-all hover:-translate-y-0.5 hover:bg-sand-300">
             {site.email}
           </a>
-          <a href={href("/recruit")} class="rounded-xl border-2 border-paper-50/30 px-5 py-3 text-sm font-bold text-paper-50 transition-colors hover:border-paper-50">
+          <a href={href("/recruit")} class="rounded-xl border-2 border-paper-50/30 px-6 py-3.5 text-sm font-bold text-paper-50 transition-all hover:-translate-y-0.5 hover:border-paper-50">
             {ja ? "B3学生へのメッセージ" : "For prospective students"}
           </a>
         </div>
@@ -308,3 +366,56 @@ const description = ja
     </div>
   </section>
 </Layout>
+
+<script>
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Reveal sections as they scroll in.
+  const revealables = document.querySelectorAll<HTMLElement>(".reveal");
+  if (reduced) {
+    revealables.forEach((el) => el.classList.add("is-visible"));
+  } else {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
+    );
+    revealables.forEach((el) => observer.observe(el));
+  }
+
+  // Count the stats up once, when they first come into view.
+  const counters = document.querySelectorAll<HTMLElement>(".stat-num");
+  const runCounter = (el: HTMLElement) => {
+    const target = Number(el.dataset.to ?? 0);
+    if (reduced) {
+      el.textContent = String(target);
+      return;
+    }
+    const duration = 1100;
+    const start = performance.now();
+    const step = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      // Ease out so the number settles rather than stopping dead.
+      el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  const counterObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        runCounter(entry.target as HTMLElement);
+        counterObserver.unobserve(entry.target);
+      });
+    },
+    { threshold: 0.5 },
+  );
+  counters.forEach((el) => counterObserver.observe(el));
+</script>
