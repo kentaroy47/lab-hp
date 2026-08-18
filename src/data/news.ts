@@ -1,9 +1,20 @@
+export type NewsTag = "award" | "paper" | "grant" | "press" | "lab";
+
 export interface NewsItem {
   date: string;
   ja: string;
   en: string;
-  tag?: "award" | "paper" | "grant" | "press" | "lab";
+  tag?: NewsTag;
 }
+
+/** Shared so the homepage and the news page label tags identically. */
+export const newsTagLabels: Record<NewsTag, { ja: string; en: string; cls: string }> = {
+  award: { ja: "受賞", en: "Award", cls: "bg-sand-300/70 text-navy-800" },
+  paper: { ja: "論文", en: "Paper", cls: "bg-coral-300/30 text-coral-600" },
+  grant: { ja: "研究費", en: "Grant", cls: "bg-sky-200/70 text-navy-700" },
+  press: { ja: "プレス", en: "Press", cls: "bg-navy-800 text-paper-50" },
+  lab: { ja: "研究室", en: "Lab", cls: "bg-paper-300 text-navy-700" },
+};
 
 export const news: NewsItem[] = [
   { date: "2026-08", tag: "award", ja: "吉田くんの研究がMIRU優秀学生賞を受賞しました🎉", en: "Ryo Yoshida received the MIRU Outstanding Student Award 🎉" },
