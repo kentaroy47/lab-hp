@@ -1,12 +1,13 @@
 ---
+import { getCollection, render } from "astro:content";
 import Layout from "../../../layouts/Layout.astro";
 import Icon from "../../../components/Icon.astro";
-import { projects } from "../../../data/projects";
 import { locales, t, type Locale } from "../../../i18n/strings";
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
   return locales.flatMap((locale) =>
-    projects.map((project) => ({ params: { locale, slug: project.slug }, props: { project } })),
+    projects.map((project) => ({ params: { locale, slug: project.id }, props: { project } })),
   );
 }
 
@@ -16,44 +17,68 @@ const s = t(locale);
 const ja = locale === "ja";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const tagStyles: Record<string, string> = {
-  security: "bg-coral-300/30 text-coral-600",
-  sensing: "bg-sky-200/70 text-navy-700",
-  computing: "bg-sand-300/50 text-navy-700",
+const { Content } = await render(project);
+const d = project.data;
+
+const statusLabels: Record<string, { ja: string; en: string; cls: string }> = {
+  published: { ja: "発表済み", en: "Published", cls: "bg-paper-300/70 text-navy-700" },
+  accepted: { ja: "採択", en: "Accepted", cls: "bg-coral-300/30 text-coral-600" },
+  preprint: { ja: "プレプリント", en: "Preprint", cls: "bg-sky-200/70 text-navy-700" },
 };
+
+const linkLabels: Record<string, string> = {
+  paper: "Paper",
+  arxiv: "arXiv",
+  code: "Code",
+  project: "Project page",
+  press: "Press",
+};
+
+// Related work: same section, sharing at least one tag.
+const all = await getCollection("projects");
+const related = all
+  .filter((p) => p.id !== project.id && p.data.tags.some((tag) => d.tags.includes(tag)))
+  .sort((a, b) => b.data.year - a.data.year)
+  .slice(0, 3);
 ---
 
-<Layout
-  locale={locale}
-  path={`/projects/${project.slug}`}
-  title={project.title}
-  description={ja ? project.summary.ja : project.summary.en}
->
+<Layout locale={locale} path={`/projects/${project.id}`} title={d.short_title} description={ja ? d.description_ja : d.title}>
   <section class="relative overflow-hidden border-b border-navy-900/8 bg-gradient-to-b from-sky-200/45 to-paper-100">
     <div class="trace-grid absolute inset-0 opacity-70"></div>
-    <div class="relative mx-auto max-w-4xl px-5 py-16 md:py-20">
+    <div class="relative mx-auto max-w-5xl px-5 py-14 md:py-16">
       <a href={`${base}/${locale}/projects`} class="text-sm font-bold text-coral-600 hover:underline">
         ← {s.common.backToProjects}
       </a>
 
-      <div class="mt-7 flex flex-wrap items-center gap-2">
-        <span class:list={["rounded-full px-3 py-1 text-xs font-bold", tagStyles[project.tag]]}>{project.tag}</span>
-        {project.venue && <span class="font-mono text-xs font-medium text-navy-600">{project.venue}</span>}
+      <div class="mt-6 flex flex-wrap items-center gap-2">
+        <span class="font-mono text-sm font-bold text-coral-600">{d.venue} {d.year}</span>
+        <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", statusLabels[d.status].cls]}>
+          {ja ? statusLabels[d.status].ja : statusLabels[d.status].en}
+        </span>
+        <span class="rounded-full bg-paper-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-700">{d.section}</span>
       </div>
 
-      <h1 class="mt-5 text-4xl font-bold tracking-tight text-navy-900">{project.title}</h1>
-      {project.subtitle && <p class="mt-4 text-lg leading-snug text-navy-600">{project.subtitle}</p>}
+      <h1 class="mt-4 text-3xl font-bold leading-tight tracking-tight text-navy-900 md:text-4xl">{d.title}</h1>
 
-      {project.links && (
-        <div class="mt-8 flex flex-wrap gap-3">
-          {project.links.map((l) => (
+      <p class="mt-5 text-sm leading-relaxed text-navy-600">
+        {d.authors.map((a, i) => (
+          <>
+            <span class:list={[a.me && "font-bold text-navy-900"]}>{a.name}</span>
+            {i < d.authors.length - 1 && ", "}
+          </>
+        ))}
+      </p>
+
+      {Object.keys(d.links).length > 0 && (
+        <div class="mt-7 flex flex-wrap gap-2.5">
+          {Object.entries(d.links).map(([key, href]) => (
             <a
-              href={l.href}
+              href={href}
               target="_blank"
               rel="noopener"
               class="inline-flex items-center gap-2 rounded-xl bg-navy-800 px-4 py-2.5 text-sm font-bold text-paper-50 transition-colors hover:bg-navy-700"
             >
-              {l.label}
+              {linkLabels[key] ?? key}
               <Icon name="external" class="h-3.5 w-3.5" />
             </a>
           ))}
@@ -62,14 +87,57 @@ const tagStyles: Record<string, string> = {
     </div>
   </section>
 
-  <article class="mx-auto max-w-4xl px-5 py-16 md:py-20">
-    <p class="text-lg leading-relaxed text-navy-700">{ja ? project.summary.ja : project.summary.en}</p>
+  <article class="mx-auto max-w-5xl px-5 py-14 md:py-16">
+    {d.teaser && (
+      <img
+        src={`${base}/projects/${d.teaser}`}
+        alt=""
+        class="paper-card mb-12 w-full rounded-3xl border border-navy-900/8 bg-paper-50"
+      />
+    )}
 
-    {project.sections?.map((sec) => (
-      <section class="mt-12">
-        <h2 class="text-xl font-bold tracking-tight text-navy-900">{sec.heading}</h2>
-        <p class="mt-4 leading-relaxed text-navy-600">{sec.body}</p>
-      </section>
-    ))}
+    <div class="grid gap-12 lg:grid-cols-[1fr_16rem]">
+      <div>
+        {ja && (
+          <div class="rounded-2xl border-l-4 border-coral-400 bg-paper-200/60 px-6 py-5">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">概要</h2>
+            <p class="mt-3 leading-relaxed text-navy-700">{d.description_ja}</p>
+          </div>
+        )}
+
+        <div
+          class="prose-csg mt-8 leading-relaxed text-navy-700 [&>p]:mt-4 [&_a]:font-bold [&_a]:text-coral-600 [&_a:hover]:underline [&_h2]:mt-10 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-navy-900 [&_li]:mt-1.5 [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:pl-5"
+        >
+          <Content />
+        </div>
+      </div>
+
+      <aside class="space-y-8">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">{ja ? "タグ" : "Tags"}</h2>
+          <ul class="mt-3 flex flex-wrap gap-1.5">
+            {d.tags.map((tag) => (
+              <li class="rounded-full bg-paper-200 px-2.5 py-1 text-[11px] font-medium text-navy-600">{tag}</li>
+            ))}
+          </ul>
+        </div>
+
+        {related.length > 0 && (
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">{ja ? "関連プロジェクト" : "Related"}</h2>
+            <ul class="mt-3 space-y-3">
+              {related.map((r) => (
+                <li>
+                  <a href={`${base}/${locale}/projects/${r.id}`} class="group block">
+                    <span class="text-sm font-bold text-navy-900 group-hover:text-coral-600">{r.data.short_title}</span>
+                    <span class="mt-0.5 block font-mono text-[11px] text-navy-500">{r.data.venue} {r.data.year}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </aside>
+    </div>
   </article>
 </Layout>

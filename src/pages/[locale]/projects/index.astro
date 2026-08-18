@@ -1,8 +1,8 @@
 ---
+import { getCollection } from "astro:content";
 import Layout from "../../../layouts/Layout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import Icon from "../../../components/Icon.astro";
-import { projects } from "../../../data/projects";
 import { locales, t, type Locale } from "../../../i18n/strings";
 
 export function getStaticPaths() {
@@ -14,15 +14,30 @@ const s = t(locale);
 const ja = locale === "ja";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const tagStyles: Record<string, string> = {
-  security: "bg-coral-300/30 text-coral-600",
-  sensing: "bg-sky-200/70 text-navy-700",
-  computing: "bg-sand-300/50 text-navy-700",
+const all = await getCollection("projects");
+// Newest first; `order` pins the flagship projects to the top of their year.
+const projects = all.sort((a, b) => {
+  if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+  return (a.data.order ?? 99) - (b.data.order ?? 99);
+});
+
+const sections = [...new Set(projects.map((p) => p.data.section))];
+const allTags = [...new Set(projects.flatMap((p) => p.data.tags))].sort();
+
+const statusLabels: Record<string, { ja: string; en: string; cls: string }> = {
+  published: { ja: "発表済み", en: "Published", cls: "bg-paper-300/70 text-navy-700" },
+  accepted: { ja: "採択", en: "Accepted", cls: "bg-coral-300/30 text-coral-600" },
+  preprint: { ja: "プレプリント", en: "Preprint", cls: "bg-sky-200/70 text-navy-700" },
+};
+
+const sectionLabels: Record<string, { ja: string; en: string }> = {
+  Circuit: { ja: "回路", en: "Circuit" },
+  Sensor: { ja: "センサ", en: "Sensor" },
 };
 
 const description = ja
-  ? "CSGの研究プロジェクト：Ghost-FWL、Optical LiDAR Communication、BasketLiDAR、LiDARスプーフィング攻撃研究など。"
-  : "Research projects at CSG: Ghost-FWL, Optical LiDAR Communication, BasketLiDAR, and LiDAR spoofing attack research.";
+  ? `CSGの研究プロジェクト${projects.length}件。CVPR・ICCV・NDSS・ISSCC・IROS・ICRAなどで発表した、インメモリAI回路とLiDARセキュリティの研究成果。`
+  : `${projects.length} research projects from CSG, published at CVPR, ICCV, NDSS, ISSCC, IROS, and ICRA — spanning in-memory AI circuits and LiDAR security.`;
 ---
 
 <Layout locale={locale} path="/projects" title={ja ? "プロジェクト" : "Projects"} description={description}>
@@ -30,28 +45,122 @@ const description = ja
     eyebrow="Projects"
     title={ja ? "研究プロジェクト" : "Projects"}
     lead={ja
-      ? "進行中・発表済みの主要プロジェクトです。データセット公開やデモ動画など、実際に触れる成果も揃えています。"
-      : "Our major ongoing and published projects — including released datasets and demo videos you can actually explore."}
+      ? `進行中・発表済みの研究プロジェクト${projects.length}件です。論文・コード・プロジェクトページへのリンクを揃えています。`
+      : `${projects.length} ongoing and published research projects, with links to papers, code, and project pages.`}
   />
 
-  <section class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-    <div class="grid gap-7 md:grid-cols-2">
-      {projects.map((p) => (
-        <a
-          href={`${base}/${locale}/projects/${p.slug}`}
-          class="paper-card paper-card-hover group flex flex-col rounded-3xl border border-navy-900/8 bg-paper-50 p-8 transition-all duration-300 hover:-translate-y-1"
+  <!-- Filters -->
+  <section class="sticky top-16 z-40 border-b border-navy-900/8 bg-paper-100/90 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-5 py-4">
+      <button type="button" data-filter="all" class="filter-btn rounded-full bg-navy-800 px-3.5 py-1.5 text-xs font-bold text-paper-50 transition-colors">
+        {ja ? "すべて" : "All"}
+      </button>
+      {sections.map((sec) => (
+        <button
+          type="button"
+          data-filter={`section:${sec}`}
+          class="filter-btn rounded-full bg-paper-300/60 px-3.5 py-1.5 text-xs font-bold text-navy-700 transition-colors hover:bg-paper-300"
         >
-          <div class="flex flex-wrap items-center gap-2">
-            <span class:list={["rounded-full px-3 py-1 text-xs font-bold", tagStyles[p.tag]]}>{p.tag}</span>
-            {p.venue && <span class="font-mono text-xs text-navy-500">{p.venue}</span>}
-          </div>
-
-          <h2 class="mt-5 text-xl font-bold tracking-tight text-navy-900 group-hover:text-coral-600">{p.title}</h2>
-          {p.subtitle && <p class="mt-2 text-sm font-medium leading-snug text-navy-500">{p.subtitle}</p>}
-          <p class="mt-4 flex-1 text-sm leading-relaxed text-navy-600">{ja ? p.summary.ja : p.summary.en}</p>
-          <span class="mt-6 text-sm font-bold text-coral-600">{s.common.readMore} →</span>
-        </a>
+          {ja ? sectionLabels[sec].ja : sectionLabels[sec].en}
+        </button>
+      ))}
+      <span class="mx-1 h-4 w-px bg-navy-900/12"></span>
+      {allTags.map((tag) => (
+        <button
+          type="button"
+          data-filter={`tag:${tag}`}
+          class="filter-btn rounded-full bg-paper-300/60 px-3.5 py-1.5 text-xs font-medium text-navy-700 transition-colors hover:bg-paper-300"
+        >
+          {tag}
+        </button>
       ))}
     </div>
   </section>
+
+  <section class="mx-auto max-w-6xl px-5 py-16 md:py-20">
+    <div class="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((p) => (
+        <a
+          href={`${base}/${locale}/projects/${p.id}`}
+          class="project-card paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1"
+          data-section={p.data.section}
+          data-tags={p.data.tags.join(",")}
+        >
+          {p.data.teaser && (
+            <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8 bg-paper-200/60">
+              <img
+                src={`${base}/projects/${p.data.teaser}`}
+                alt=""
+                loading="lazy"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+          )}
+
+          <div class="flex flex-1 flex-col p-6">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-mono text-xs font-bold text-coral-600">{p.data.venue} {p.data.year}</span>
+              <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", statusLabels[p.data.status].cls]}>
+                {ja ? statusLabels[p.data.status].ja : statusLabels[p.data.status].en}
+              </span>
+              {p.data.highlight && (
+                <span class="rounded-full bg-sand-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-800">★</span>
+              )}
+            </div>
+
+            <h2 class="mt-3 text-lg font-bold leading-snug tracking-tight text-navy-900 group-hover:text-coral-600">
+              {p.data.short_title}
+            </h2>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600 line-clamp-4">
+              {ja ? p.data.description_ja : p.body?.trim().split("\n").join(" ")}
+            </p>
+
+            <div class="mt-5 flex flex-wrap gap-1.5">
+              {p.data.tags.map((tag) => (
+                <span class="rounded-full bg-paper-200 px-2.5 py-0.5 text-[11px] font-medium text-navy-600">{tag}</span>
+              ))}
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <p id="empty-state" class="hidden py-16 text-center text-navy-500">
+      {ja ? "該当するプロジェクトがありません。" : "No projects match this filter."}
+    </p>
+  </section>
 </Layout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+  const cards = document.querySelectorAll<HTMLElement>(".project-card");
+  const empty = document.getElementById("empty-state");
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const filter = btn.dataset.filter!;
+
+      buttons.forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle("bg-navy-800", on);
+        b.classList.toggle("text-paper-50", on);
+        b.classList.toggle("bg-paper-300/60", !on);
+        b.classList.toggle("text-navy-700", !on);
+      });
+
+      let visible = 0;
+      cards.forEach((card) => {
+        let show = true;
+        if (filter.startsWith("section:")) {
+          show = card.dataset.section === filter.slice(8);
+        } else if (filter.startsWith("tag:")) {
+          show = (card.dataset.tags ?? "").split(",").includes(filter.slice(4));
+        }
+        card.classList.toggle("hidden", !show);
+        if (show) visible++;
+      });
+
+      empty?.classList.toggle("hidden", visible > 0);
+    });
+  });
+</script>
