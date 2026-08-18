@@ -231,11 +231,13 @@ const description = ja
       <ul class="mt-7 space-y-3">
         {grants.map((g) => (
           <li class="paper-card rounded-2xl bg-paper-50 p-6">
-            <h3 class="font-bold leading-snug text-navy-900">{g.title}</h3>
+            <h3 class="font-bold leading-snug text-navy-900">{ja ? g.title.ja : g.title.en}</h3>
             <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span class="font-mono text-xs text-navy-500">{g.period}</span>
-              <span class="text-navy-600">{g.program}</span>
-              <span class="rounded-full bg-coral-300/25 px-2.5 py-0.5 text-[11px] font-bold text-coral-600">{g.role}</span>
+              <span class="text-navy-600">{ja ? g.program.ja : g.program.en}</span>
+              <span class="rounded-full bg-coral-300/25 px-2.5 py-0.5 text-[11px] font-bold text-coral-600">
+                {ja ? g.role.ja : g.role.en}
+              </span>
             </div>
           </li>
         ))}

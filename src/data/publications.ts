@@ -546,21 +546,92 @@ export const awards: Award[] = [
 ];
 
 export interface Grant {
-  title: string;
+  title: { ja: string; en: string };
   period: string;
-  program: string;
-  role: string;
+  program: { ja: string; en: string };
+  role: { ja: string; en: string };
 }
 
+const roles = {
+  groupLeader: { ja: "グループリーダー", en: "Group Leader" },
+  coPI: { ja: "主たる共同研究者", en: "Principal Co-Researcher" },
+  pi: { ja: "代表 (PI)", en: "Principal Investigator" },
+  member: { ja: "分担", en: "Co-Researcher" },
+} as const;
+
 export const grants: Grant[] = [
-  { title: "アナデジ混載型エッジAI SoC設計技術の研究開発", period: "2025.12–2030.2", program: "JST 次世代エッジAI半導体研究開発事業", role: "グループリーダー" },
-  { title: "先端CMOSプロセスVLSI回路設計省力化フレームワークの構築", period: "2025.12–2030.3", program: "JST ASPIRE Top", role: "主たる共同研究者" },
-  { title: "ハードウェア・ソフトウェア協調設計によるセキュアLiDARの創出", period: "2024.04–2028.03", program: "科研費 基盤研究B", role: "代表 (PI)" },
-  { title: "AI駆動型サイバーフィジカルシステムのセキュリティ評価・対策基盤", period: "2023.10–2029.03", program: "JST CREST", role: "主たる共同研究者" },
-  { title: "ゆらぎの熱力学に基づく確率的コンピューティング基盤の創出", period: "2023.04–2027.03", program: "科研費 基盤研究A", role: "分担" },
-  { title: "サイバーとフィジカルを横断したセンサセキュリティ研究", period: "2022.09–2026.03", program: "JST さきがけ ICT基盤強化領域", role: "代表 (PI)" },
-  { title: "D3-AI: 多様性と環境変化に寄り添う分散機械学習基盤の創出", period: "2021.09–2027.03", program: "JST CREST", role: "主たる共同研究者" },
-  { title: "LiDAR based Sensing System Focused on Privacy Preserving and Occlusions", period: "2021.08–2023.03", program: "科研費 研究スタート支援", role: "代表 (PI)" },
+  {
+    title: {
+      ja: "アナデジ混載型エッジAI SoC設計技術の研究開発",
+      en: "Design technology for mixed analog-digital edge AI SoCs",
+    },
+    period: "2025.12–2030.2",
+    program: { ja: "JST 次世代エッジAI半導体研究開発事業", en: "JST Next-Generation Edge AI Semiconductor Program" },
+    role: roles.groupLeader,
+  },
+  {
+    title: {
+      ja: "先端CMOSプロセスVLSI回路設計省力化フレームワークの構築",
+      en: "A framework for reducing VLSI design effort in advanced CMOS processes",
+    },
+    period: "2025.12–2030.3",
+    program: { ja: "JST ASPIRE Top", en: "JST ASPIRE Top" },
+    role: roles.coPI,
+  },
+  {
+    title: {
+      ja: "ハードウェア・ソフトウェア協調設計によるセキュアLiDARの創出",
+      en: "Secure LiDAR through hardware-software co-design",
+    },
+    period: "2024.04–2028.03",
+    program: { ja: "科研費 基盤研究B", en: "KAKENHI Grant-in-Aid for Scientific Research (B)" },
+    role: roles.pi,
+  },
+  {
+    title: {
+      ja: "AI駆動型サイバーフィジカルシステムのセキュリティ評価・対策基盤",
+      en: "Security evaluation and defense for AI-driven cyber-physical systems",
+    },
+    period: "2023.10–2029.03",
+    program: { ja: "JST CREST", en: "JST CREST" },
+    role: roles.coPI,
+  },
+  {
+    title: {
+      ja: "ゆらぎの熱力学に基づく確率的コンピューティング基盤の創出",
+      en: "Stochastic computing founded on the thermodynamics of fluctuation",
+    },
+    period: "2023.04–2027.03",
+    program: { ja: "科研費 基盤研究A", en: "KAKENHI Grant-in-Aid for Scientific Research (A)" },
+    role: roles.member,
+  },
+  {
+    title: {
+      ja: "サイバーとフィジカルを横断したセンサセキュリティ研究",
+      en: "Sensor security research crossing cyber and physical domains",
+    },
+    period: "2022.09–2026.03",
+    program: { ja: "JST さきがけ ICT基盤強化領域", en: "JST PRESTO (ICT Foundation)" },
+    role: roles.pi,
+  },
+  {
+    title: {
+      ja: "D3-AI: 多様性と環境変化に寄り添う分散機械学習基盤の創出",
+      en: "D3-AI: distributed machine learning attuned to diversity and changing environments",
+    },
+    period: "2021.09–2027.03",
+    program: { ja: "JST CREST", en: "JST CREST" },
+    role: roles.coPI,
+  },
+  {
+    title: {
+      ja: "プライバシーと遮蔽に着目したLiDARセンシングシステム",
+      en: "LiDAR based Sensing System Focused on Privacy Preserving and Occlusions",
+    },
+    period: "2021.08–2023.03",
+    program: { ja: "科研費 研究スタート支援", en: "KAKENHI Grant-in-Aid for Research Activity Start-up" },
+    role: roles.pi,
+  },
 ];
 
 export const sponsors = [

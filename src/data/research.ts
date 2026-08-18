@@ -9,7 +9,7 @@ export interface ResearchTheme {
   /** What a student actually spends their days doing — the thing B3 students ask first. */
   whatYouDo: { ja: string; en: string }[];
   /** Skills and keywords picked up along the way. */
-  keywords: string[];
+  keywords: { ja: string; en: string }[];
   /** The formal framing, used on homepage cards and meta descriptions. */
   summary: { ja: string; en: string };
   projects: { ja: string; en: string }[];
@@ -47,7 +47,14 @@ export const researchThemes: ResearchTheme[] = [
         en: "Write up the results and present at top venues like ISSCC",
       },
     ],
-    keywords: ["回路設計", "深層学習", "PyTorch", "半導体プロセス", "アナログ回路", "モデル量子化"],
+    keywords: [
+      { ja: "回路設計", en: "Circuit design" },
+      { ja: "深層学習", en: "Deep learning" },
+      { ja: "PyTorch", en: "PyTorch" },
+      { ja: "半導体プロセス", en: "Semiconductor processes" },
+      { ja: "アナログ回路", en: "Analog circuits" },
+      { ja: "モデル量子化", en: "Model quantization" },
+    ],
     summary: {
       ja: "エッジAI技術の進歩により、自動運転車や作業用ロボットなど、かつては夢物語だったアプリケーションが現実のものになっています。CSGでは、デジタル回路の性能限界を超える新しい計算原理を用いた革新的な回路技術の開発に取り組んでいます。",
       en: "Advances in edge AI are turning once-futuristic applications — autonomous vehicles, working robots — into reality. At CSG, we develop innovative circuit technologies based on new computing principles that go beyond the performance limits of digital circuits.",
@@ -101,7 +108,14 @@ export const researchThemes: ResearchTheme[] = [
         en: "Present at top security venues like NDSS — and sometimes end up in the press",
       },
     ],
-    keywords: ["LiDAR", "光学系の自作", "セキュリティ", "3D点群処理", "深層学習", "SLAM"],
+    keywords: [
+      { ja: "LiDAR", en: "LiDAR" },
+      { ja: "光学系の自作", en: "Building optics" },
+      { ja: "セキュリティ", en: "Security" },
+      { ja: "3D点群処理", en: "3D point clouds" },
+      { ja: "深層学習", en: "Deep learning" },
+      { ja: "SLAM", en: "SLAM" },
+    ],
     summary: {
       ja: "自動運転技術の普及に伴い、そのセキュリティの重要性が増しています。CSGでは、LiDARを含む各種センサーのセキュリティ分析と、堅牢なシステム設計に取り組んでいます。",
       en: "As autonomous driving spreads, sensor security grows ever more critical. CSG researches security analysis of LiDAR and other sensors, and designs systems that remain robust under attack.",
@@ -162,7 +176,14 @@ export const researchThemes: ResearchTheme[] = [
         en: "Release your datasets for researchers worldwide to build on",
       },
     ],
-    keywords: ["LiDAR", "3D点群", "深層学習", "物体追跡", "医療応用", "スポーツ解析"],
+    keywords: [
+      { ja: "LiDAR", en: "LiDAR" },
+      { ja: "3D点群", en: "3D point clouds" },
+      { ja: "深層学習", en: "Deep learning" },
+      { ja: "物体追跡", en: "Object tracking" },
+      { ja: "医療応用", en: "Healthcare applications" },
+      { ja: "スポーツ解析", en: "Sports analytics" },
+    ],
     summary: {
       ja: "自動運転技術の進歩に伴い、LiDARなどの3Dセンサーが不可欠となっています。CSGでは、高性能で低コストなLiDARシステムの開発、そしてスポーツや医療応用に取り組んでいます。",
       en: "As autonomous driving advances, 3D sensors like LiDAR have become indispensable. CSG develops high-performance, low-cost LiDAR systems and applies them to sports and healthcare.",

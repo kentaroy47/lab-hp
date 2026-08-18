@@ -2,6 +2,8 @@
 import { getCollection, render } from "astro:content";
 import Layout from "../../../layouts/Layout.astro";
 import Icon from "../../../components/Icon.astro";
+import ProjectTeaser from "../../../components/ProjectTeaser.astro";
+import { categoryOf } from "../../../data/projectCategories";
 import { locales, t, type Locale } from "../../../i18n/strings";
 
 export async function getStaticPaths() {
@@ -88,13 +90,14 @@ const related = all
   </section>
 
   <article class="mx-auto max-w-5xl px-5 py-14 md:py-16">
-    {d.teaser && (
-      <img
-        src={`${base}/projects/${d.teaser}`}
-        alt=""
-        class="paper-card mb-12 w-full rounded-3xl border border-navy-900/8 bg-paper-50"
-      />
-    )}
+    <ProjectTeaser
+      title={d.short_title}
+      venue={d.venue}
+      year={d.year}
+      category={categoryOf(project)}
+      seed={project.id}
+      class="paper-card mb-12 w-full rounded-3xl"
+    />
 
     <div class="grid gap-12 lg:grid-cols-[1fr_16rem]">
       <div>

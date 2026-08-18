@@ -65,20 +65,20 @@ export const whyCsg: Highlight[] = [
 /** Student-won awards — evidence that students here get recognized, not just the PI. */
 export interface StudentAward {
   year: string;
-  name: string;
+  name: { ja: string; en: string };
   award: { ja: string; en: string };
 }
 
 export const studentAwards: StudentAward[] = [
-  { year: "2026", name: "吉田 / Ryo Yoshida", award: { ja: "MIRU優秀学生賞", en: "MIRU Outstanding Student Award" } },
-  { year: "2026", name: "佐古 / Ozora Sako", award: { ja: "VehicleSec Best Demo Award", en: "VehicleSec Best Demo Award" } },
-  { year: "2026", name: "張 / Wenlun Zhang", award: { ja: "ASP-DAC Excellent Student Author Award", en: "ASP-DAC Excellent Student Author Award" } },
-  { year: "2026", name: "池田 / Kazuma Ikeda", award: { ja: "自動車工学会賞", en: "JSAE Award" } },
-  { year: "2026", name: "菅原 / Ryu Sugawara", award: { ja: "理工学部賞・卒業論文賞", en: "Faculty of Science and Technology Award, Thesis Award" } },
-  { year: "2026", name: "渡辺 / Marino Watanabe", award: { ja: "電気学術奨励賞", en: "IEEJ Encouragement Award" } },
-  { year: "2025", name: "張 / Wenlun Zhang", award: { ja: "PAKDD Best Paper Award", en: "PAKDD Best Paper Award" } },
-  { year: "2025", name: "李 / Xinyu Li", award: { ja: "IEEE ICCE-Asia Best Poster Award", en: "IEEE ICCE-Asia Best Poster Award" } },
-  { year: "2023", name: "山下 / Kaoru Yamashita", award: { ja: "IEEE CICC Outstanding Student Paper Award", en: "IEEE CICC Outstanding Student Paper Award" } },
+  { year: "2026", name: { ja: "吉田", en: "Ryo Yoshida" }, award: { ja: "MIRU優秀学生賞", en: "MIRU Outstanding Student Award" } },
+  { year: "2026", name: { ja: "佐古", en: "Ozora Sako" }, award: { ja: "VehicleSec Best Demo Award", en: "VehicleSec Best Demo Award" } },
+  { year: "2026", name: { ja: "張", en: "Wenlun Zhang" }, award: { ja: "ASP-DAC Excellent Student Author Award", en: "ASP-DAC Excellent Student Author Award" } },
+  { year: "2026", name: { ja: "池田", en: "Kazuma Ikeda" }, award: { ja: "自動車工学会賞", en: "JSAE Award" } },
+  { year: "2026", name: { ja: "菅原", en: "Ryu Sugawara" }, award: { ja: "理工学部賞・卒業論文賞", en: "Faculty Award and Thesis Award" } },
+  { year: "2026", name: { ja: "渡辺", en: "Marino Watanabe" }, award: { ja: "電気学術奨励賞", en: "IEEJ Encouragement Award" } },
+  { year: "2025", name: { ja: "張", en: "Wenlun Zhang" }, award: { ja: "PAKDD Best Paper Award", en: "PAKDD Best Paper Award" } },
+  { year: "2025", name: { ja: "李", en: "Xinyu Li" }, award: { ja: "IEEE ICCE-Asia Best Poster Award", en: "IEEE ICCE-Asia Best Poster Award" } },
+  { year: "2023", name: { ja: "山下", en: "Kaoru Yamashita" }, award: { ja: "IEEE CICC Outstanding Student Paper Award", en: "IEEE CICC Outstanding Student Paper Award" } },
 ];
 
 /** Where alumni went — concrete career outcomes. */

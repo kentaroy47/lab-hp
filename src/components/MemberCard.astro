@@ -58,7 +58,7 @@ const initials = member.name
     <p class="mt-2 text-xs leading-relaxed text-navy-600">「{member.comment}」</p>
   )}
 
-  {(member.mail || member.github) && (
+  {(member.mail || member.github || member.url) && (
     <div class="mt-3 flex items-center gap-2.5">
       {member.mail && (
         <a href={`mailto:${member.mail}`} aria-label={`Email ${member.name}`} class="text-navy-400 transition-colors hover:text-coral-600">
@@ -68,6 +68,11 @@ const initials = member.name
       {member.github && (
         <a href={member.github} target="_blank" rel="noopener" aria-label={`GitHub of ${member.name}`} class="text-navy-400 transition-colors hover:text-coral-600">
           <Icon name="github" class="h-3.5 w-3.5" />
+        </a>
+      )}
+      {member.url && (
+        <a href={member.url} target="_blank" rel="noopener" aria-label={`Homepage of ${member.name}`} class="text-navy-400 transition-colors hover:text-coral-600">
+          <Icon name="external" class="h-3.5 w-3.5" />
         </a>
       )}
     </div>

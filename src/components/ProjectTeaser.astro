@@ -1,0 +1,171 @@
+---
+import type { ProjectCategory } from "../data/projectCategories";
+
+/**
+ * Teasers are drawn from project metadata rather than shipped as files, so every
+ * card sits in the site's warm palette and a new project gets artwork for free.
+ * Each category has its own motif: circuit traces, a spoofed LiDAR fan, or a
+ * point-cloud sweep.
+ */
+interface Props {
+  title: string;
+  venue: string;
+  year: number;
+  category: ProjectCategory;
+  /** Distinct projects in a category should not draw identical artwork. */
+  seed: string;
+  class?: string;
+}
+
+const { title, venue, year, category, seed, class: className = "" } = Astro.props;
+
+const palette: Record<ProjectCategory, { wash: string; ink: string; accent: string; faint: string }> = {
+  computing: { wash: "#eaf2fa", ink: "#274370", accent: "#e87e52", faint: "#a5cceb" },
+  security: { wash: "#fdeee6", ink: "#1b2f52", accent: "#d4653a", faint: "#f6b294" },
+  sensing: { wash: "#fdf3e0", ink: "#274370", accent: "#e8b155", faint: "#f7d9a0" },
+};
+const c = palette[category];
+
+// A stable pseudo-random stream so each project's motif differs but never shifts between builds.
+let n = [...seed].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7);
+const rand = () => ((n = (n * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+
+const traces = Array.from({ length: 7 }, (_, i) => ({
+  y: 60 + i * 34,
+  turn: 150 + Math.floor(rand() * 190),
+  drop: rand() > 0.5,
+}));
+
+const rays = Array.from({ length: 11 }, (_, i) => {
+  const angle = -46 + i * 9.2;
+  return { angle, ghost: i === 3 + Math.floor(rand() * 4) };
+});
+
+const cloud = Array.from({ length: 74 }, () => {
+  const t = rand();
+  const arc = 0.55 + rand() * 0.42;
+  return {
+    x: 330 + Math.cos(Math.PI * (1.15 + t * 0.7)) * 250 * arc,
+    y: 215 + Math.sin(Math.PI * (1.15 + t * 0.7)) * 165 * arc,
+    r: 1.6 + rand() * 3.1,
+    o: 0.25 + rand() * 0.6,
+  };
+});
+
+// Scale the caption to the title rather than clipping it — only absurd lengths truncate.
+const titleSize = title.length <= 18 ? 42 : title.length <= 24 ? 36 : title.length <= 33 ? 30 : 25;
+const displayTitle = title.length > 42 ? `${title.slice(0, 41)}…` : title;
+---
+
+<svg viewBox="0 0 800 450" class={className} role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id={`wash-${seed}`} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color={c.wash} />
+      <stop offset="100%" stop-color="#fffdf9" />
+    </linearGradient>
+    <clipPath id={`clip-${seed}`}><rect width="800" height="450" /></clipPath>
+  </defs>
+
+  <rect width="800" height="450" fill={`url(#wash-${seed})`} />
+
+  <g clip-path={`url(#clip-${seed})`} opacity="0.85">
+    {category === "computing" && (
+      <g stroke={c.faint} fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        {traces.map((t) => (
+          <path
+            d={`M-10 ${t.y} H${t.turn} L${t.turn + 26} ${t.drop ? t.y + 26 : t.y - 26} H560`}
+            opacity="0.75"
+          />
+        ))}
+        {traces.map((t) => (
+          <circle cx={t.turn} cy={t.y} r="4.5" fill={c.faint} stroke="none" opacity="0.9" />
+        ))}
+        <rect x="566" y="150" width="150" height="150" rx="14" fill={c.wash} stroke={c.accent} stroke-width="3" />
+        <rect x="606" y="190" width="70" height="70" rx="7" fill={c.accent} stroke="none" opacity="0.28" />
+        {[0, 1, 2, 3].map((i) => (
+          <>
+            <path d={`M${592 + i * 34} 150 V126`} stroke={c.accent} opacity="0.7" />
+            <path d={`M${592 + i * 34} 300 V324`} stroke={c.accent} opacity="0.7" />
+            <path d={`M566 ${176 + i * 34} H542`} stroke={c.accent} opacity="0.7" />
+            <path d={`M716 ${176 + i * 34} H740`} stroke={c.accent} opacity="0.7" />
+          </>
+        ))}
+      </g>
+    )}
+
+    {category === "security" && (
+      <g>
+        {rays.map((r) => (
+          <path
+            d={`M120 225 L${120 + Math.cos((r.angle * Math.PI) / 180) * 690} ${225 + Math.sin((r.angle * Math.PI) / 180) * 690}`}
+            stroke={r.ghost ? c.accent : c.faint}
+            stroke-width={r.ghost ? 3.4 : 2}
+            stroke-linecap="round"
+            opacity={r.ghost ? 0.95 : 0.5}
+            stroke-dasharray={r.ghost ? "16 11" : undefined}
+          />
+        ))}
+        <circle cx="120" cy="225" r="26" fill={c.wash} stroke={c.ink} stroke-width="3" />
+        <circle cx="120" cy="225" r="9" fill={c.ink} />
+        {rays
+          .filter((r) => r.ghost)
+          .map((r) => (
+            <circle
+              cx={120 + Math.cos((r.angle * Math.PI) / 180) * 430}
+              cy={225 + Math.sin((r.angle * Math.PI) / 180) * 430}
+              r="17"
+              fill={c.accent}
+              opacity="0.5"
+            />
+          ))}
+      </g>
+    )}
+
+    {category === "sensing" && (
+      <g>
+        {[0.42, 0.62, 0.82, 1.02].map((k) => (
+          <ellipse
+            cx="330"
+            cy="215"
+            rx={250 * k}
+            ry={165 * k}
+            fill="none"
+            stroke={c.faint}
+            stroke-width="2"
+            opacity="0.55"
+          />
+        ))}
+        {cloud.map((p) => (
+          <circle cx={p.x} cy={p.y} r={p.r} fill={c.accent} opacity={p.o} />
+        ))}
+        <circle cx="330" cy="215" r="13" fill={c.ink} />
+      </g>
+    )}
+  </g>
+
+  <!-- Legibility wash behind the caption -->
+  <rect x="0" y="292" width="800" height="158" fill="#fffdf9" opacity="0.9" />
+
+  <text
+    x="52"
+    y="352"
+    font-family="ui-monospace, SFMono-Regular, monospace"
+    font-size="21"
+    font-weight="600"
+    fill={c.accent}
+    letter-spacing="1.5"
+  >
+    {venue} {year}
+  </text>
+  <text
+    x="52"
+    y="408"
+    font-family="Inter, system-ui, -apple-system, sans-serif"
+    font-size="42"
+    font-weight="800"
+    fill={c.ink}
+    letter-spacing="-0.8"
+  >
+    {displayTitle}
+  </text>
+</svg>

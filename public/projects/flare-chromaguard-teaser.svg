@@ -1,0 +1,113 @@
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050d1a"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <radialGradient id="glowAtk" cx="20%" cy="45%" r="42%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowMid" cx="50%" cy="45%" r="38%">
+      <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowFix" cx="80%" cy="45%" r="42%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="160" cy="200" rx="210" ry="190" fill="url(#glowAtk)"/>
+  <ellipse cx="400" cy="200" rx="200" ry="180" fill="url(#glowMid)"/>
+  <ellipse cx="650" cy="200" rx="210" ry="190" fill="url(#glowFix)"/>
+
+  <!-- FLARE attack (left) -->
+  <rect x="34" y="72" width="196" height="248" rx="8" fill="#0f1e30" stroke="#ef4444" stroke-width="1.2" opacity="0.9"/>
+  <text x="132" y="95" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#fca5a5" text-anchor="middle">FLARE — Spotlight Attack</text>
+
+  <!-- Spotlight beam onto a robot arm -->
+  <rect x="50" y="106" width="164" height="104" rx="5" fill="#101c30" opacity="0.95"/>
+  <circle cx="86" cy="122" r="9" fill="#fbbf24" opacity="0.9"/>
+  <polygon points="86,131 60,200 118,200" fill="url(#beam)"/>
+  <rect x="132" y="176" width="9" height="26" rx="2" fill="#64748b"/>
+  <rect x="130" y="150" width="34" height="9" rx="3" fill="#94a3b8"/>
+  <rect x="158" y="152" width="9" height="26" rx="2" fill="#64748b"/>
+  <rect x="150" y="178" width="24" height="16" rx="2" fill="#475569"/>
+  <rect x="70" y="188" width="20" height="14" rx="2" fill="#ef4444" opacity="0.55"/>
+  <text x="132" y="122" font-family="monospace" font-size="8.5" fill="#fcd34d" text-anchor="end" opacity="0.9">targeted light</text>
+
+  <rect x="50" y="218" width="164" height="46" rx="6" fill="#3f0d0d" opacity="0.9"/>
+  <text x="132" y="243" font-family="system-ui,sans-serif" font-size="22" font-weight="800" fill="#ef4444" text-anchor="middle">0%</text>
+  <text x="132" y="258" font-family="system-ui,sans-serif" font-size="9" fill="#fca5a5" text-anchor="middle">task success under attack</text>
+
+  <rect x="50" y="272" width="164" height="32" rx="4" fill="#2a1010" opacity="0.85"/>
+  <text x="132" y="286" font-family="system-ui,sans-serif" font-size="9.5" fill="#fca5a5" text-anchor="middle" font-weight="600">Black-box</text>
+  <text x="132" y="298" font-family="system-ui,sans-serif" font-size="8.5" fill="#f87171" text-anchor="middle" opacity="0.85">no access to model internals</text>
+
+  <line x1="232" y1="196" x2="262" y2="196" stroke="#94a3b8" stroke-width="2" opacity="0.8"/>
+  <polygon points="262,190 276,196 262,202" fill="#94a3b8" opacity="0.8"/>
+
+  <!-- The defensive pitfall (center) -->
+  <rect x="280" y="72" width="240" height="248" rx="8" fill="#0f1e30" stroke="#94a3b8" stroke-width="1.4" opacity="0.95"/>
+  <text x="400" y="95" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#cbd5e1" text-anchor="middle">The Defensive Pitfall</text>
+
+  <rect x="296" y="106" width="208" height="34" rx="5" fill="#1e293b" opacity="0.9"/>
+  <text x="400" y="120" font-family="system-ui,sans-serif" font-size="9.5" fill="#cbd5e1" text-anchor="middle" font-weight="600">Naive data augmentation</text>
+  <text x="400" y="133" font-family="system-ui,sans-serif" font-size="8.5" fill="#94a3b8" text-anchor="middle" opacity="0.9">the standard countermeasure</text>
+
+  <line x1="400" y1="142" x2="400" y2="156" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.6"/>
+  <polygon points="394,152 400,164 406,152" fill="#94a3b8" opacity="0.6"/>
+
+  <rect x="296" y="166" width="208" height="46" rx="5" fill="#111827" opacity="0.95" stroke="#64748b" stroke-width="0.8"/>
+  <text x="400" y="184" font-family="system-ui,sans-serif" font-size="10" fill="#e2e8f0" text-anchor="middle" font-weight="700">Model learns to discard color</text>
+  <text x="400" y="199" font-family="system-ui,sans-serif" font-size="8.5" fill="#94a3b8" text-anchor="middle" opacity="0.9">collapses into a shape-biased processor</text>
+
+  <!-- Grayscale diagnostic: colour swatches turning grey -->
+  <rect x="308" y="222" width="26" height="20" rx="3" fill="#ef4444" opacity="0.75"/>
+  <rect x="338" y="222" width="26" height="20" rx="3" fill="#3b82f6" opacity="0.75"/>
+  <rect x="368" y="222" width="26" height="20" rx="3" fill="#10b981" opacity="0.75"/>
+  <text x="404" y="237" font-family="monospace" font-size="12" fill="#64748b" text-anchor="middle">→</text>
+  <rect x="416" y="222" width="26" height="20" rx="3" fill="#9ca3af" opacity="0.7"/>
+  <rect x="446" y="222" width="26" height="20" rx="3" fill="#9ca3af" opacity="0.7"/>
+  <rect x="476" y="222" width="26" height="20" rx="3" fill="#9ca3af" opacity="0.7"/>
+
+  <rect x="296" y="252" width="208" height="52" rx="6" fill="#1e293b" opacity="0.9"/>
+  <text x="400" y="276" font-family="system-ui,sans-serif" font-size="20" font-weight="800" fill="#cbd5e1" text-anchor="middle">≤ 47.5%</text>
+  <text x="400" y="292" font-family="system-ui,sans-serif" font-size="8.5" fill="#94a3b8" text-anchor="middle">on benign colour-dependent tasks</text>
+
+  <line x1="522" y1="196" x2="552" y2="196" stroke="#10b981" stroke-width="2" opacity="0.85"/>
+  <polygon points="552,190 566,196 552,202" fill="#10b981" opacity="0.85"/>
+
+  <!-- ChromaGuard (right) -->
+  <rect x="570" y="72" width="196" height="248" rx="8" fill="#0f1e30" stroke="#10b981" stroke-width="1.2" opacity="0.9"/>
+  <text x="668" y="95" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#6ee7b7" text-anchor="middle">ChromaGuard</text>
+
+  <rect x="588" y="106" width="160" height="34" rx="5" fill="#0d3d33" opacity="0.9"/>
+  <text x="668" y="120" font-family="system-ui,sans-serif" font-size="9.5" fill="#6ee7b7" text-anchor="middle" font-weight="600">Chroma-preserving</text>
+  <text x="668" y="133" font-family="system-ui,sans-serif" font-size="8.5" fill="#34d399" text-anchor="middle" opacity="0.9">adversarial training</text>
+
+  <!-- Colour retained -->
+  <rect x="600" y="150" width="26" height="20" rx="3" fill="#ef4444" opacity="0.8"/>
+  <rect x="630" y="150" width="26" height="20" rx="3" fill="#3b82f6" opacity="0.8"/>
+  <rect x="660" y="150" width="26" height="20" rx="3" fill="#10b981" opacity="0.8"/>
+  <rect x="690" y="150" width="26" height="20" rx="3" fill="#fbbf24" opacity="0.8"/>
+  <text x="668" y="184" font-family="system-ui,sans-serif" font-size="8.5" fill="#34d399" text-anchor="middle" opacity="0.9">colour perception preserved</text>
+
+  <rect x="588" y="194" width="160" height="52" rx="6" fill="#04352a" opacity="0.9"/>
+  <text x="668" y="219" font-family="system-ui,sans-serif" font-size="22" font-weight="800" fill="#10b981" text-anchor="middle">97.5%</text>
+  <text x="668" y="236" font-family="system-ui,sans-serif" font-size="9" fill="#6ee7b7" text-anchor="middle">benign colour tasks</text>
+
+  <rect x="588" y="254" width="160" height="52" rx="6" fill="#04352a" opacity="0.9"/>
+  <text x="668" y="279" font-family="system-ui,sans-serif" font-size="22" font-weight="800" fill="#10b981" text-anchor="middle">92.5%</text>
+  <text x="668" y="296" font-family="system-ui,sans-serif" font-size="9" fill="#6ee7b7" text-anchor="middle">under attack · real 6-DoF arm</text>
+
+  <!-- Title -->
+  <text x="400" y="378" font-family="system-ui,-apple-system,sans-serif" font-size="40" font-weight="800" fill="white" text-anchor="middle" opacity="0.95">FLARE &amp; ChromaGuard</text>
+  <text x="400" y="406" font-family="system-ui,-apple-system,sans-serif" font-size="13" fill="#cbd5e1" text-anchor="middle">Illumination Attacks on Vision-Language-Action Models</text>
+  <text x="400" y="430" font-family="system-ui,-apple-system,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle" letter-spacing="2">arXiv 2026</text>
+</svg>

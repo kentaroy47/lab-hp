@@ -3,6 +3,8 @@ export interface Member {
   team?: string;
   mail?: string;
   github?: string;
+  /** Personal homepage, if the member keeps one. */
+  url?: string;
   comment?: string;
   photo?: string;
 }

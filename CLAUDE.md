@@ -112,7 +112,11 @@ order: 1                       # 任意。同年内での並び順（小さい�
 English description here. 英語版ページの本文になる。Markdown が使える。
 ```
 
-ティーザー画像は `public/projects/` に置く（SVG はベクタなので Astro の最適化は不要）。
+**ティーザー画像は用意しなくてよい。** `src/components/ProjectTeaser.astro` が
+カテゴリ・学会名・年・短縮タイトルからサイトの配色で SVG を描画する。
+上流由来の `teaser:` フィールドと `public/projects/*.svg` は互換のため残してあるが、
+描画には使っていない（上流のティーザーはダークテーマで、この暖色系サイトから浮くため）。
+
 このデータは https://github.com/Keio-CSG/LabProjectPage から取り込んだもので、
 frontmatter の形式はそちらと互換にしてある。
 
@@ -121,6 +125,7 @@ frontmatter の形式はそちらと互換にしてある。
 1. `src/data/members.ts` の該当配列（`phdStudents` / `masterStudents` / `bachelorStudents` /
    `researchMembers` / `staff`）に追加。卒業したら `alumni` へ移す（進路 `destination` を記入）
 2. 写真があれば `src/assets/members/` に置き、`src/data/photos.ts` の `memberPhotos` に1行追加
+3. 個人ページがあれば `url:` を書く（カードに外部リンクアイコンが出る）
 
 ```ts
 "Taro Keio": taroKeio,   // 上部で import taroKeio from "../assets/members/taro-keio.jpg"

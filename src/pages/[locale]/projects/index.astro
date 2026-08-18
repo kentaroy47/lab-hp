@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "../../../layouts/Layout.astro";
 import PageHero from "../../../components/PageHero.astro";
 import Icon from "../../../components/Icon.astro";
+import ProjectTeaser from "../../../components/ProjectTeaser.astro";
 import { categoryOf, categoryLabels, type ProjectCategory } from "../../../data/projectCategories";
 import { locales, t, type Locale } from "../../../i18n/strings";
 
@@ -22,7 +23,10 @@ const projects = all.sort((a, b) => {
   return (a.data.order ?? 99) - (b.data.order ?? 99);
 });
 
-/** Four choices instead of fourteen: a highlights view plus the three research themes. */
+/** Grouped by year so the list reads as a timeline rather than one long grid. */
+const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - a);
+const byYear = years.map((year) => ({ year, items: projects.filter((p) => p.data.year === year) }));
+
 const filters = [
   { key: "all", label: { ja: "すべて", en: "All" }, count: projects.length },
   {
@@ -43,6 +47,14 @@ const statusLabels: Record<string, { ja: string; en: string; cls: string }> = {
   preprint: { ja: "プレプリント", en: "Preprint", cls: "bg-sky-200/70 text-navy-700" },
 };
 
+const linkLabels: Record<string, string> = {
+  paper: "Paper",
+  arxiv: "arXiv",
+  code: "Code",
+  project: "Project",
+  press: "Press",
+};
+
 const description = ja
   ? `CSGの研究プロジェクト${projects.length}件。CVPR・ICCV・NDSS・ISSCC・IROS・ICRAなどで発表した、インメモリAI回路とLiDARセキュリティの研究成果。`
   : `${projects.length} research projects from CSG, published at CVPR, ICCV, NDSS, ISSCC, IROS, and ICRA — spanning in-memory AI circuits and LiDAR security.`;
@@ -53,8 +65,8 @@ const description = ja
     eyebrow="Projects"
     title={ja ? "研究プロジェクト" : "Projects"}
     lead={ja
-      ? `進行中・発表済みの研究プロジェクト${projects.length}件です。論文・コード・プロジェクトページへのリンクを揃えています。`
-      : `${projects.length} ongoing and published research projects, with links to papers, code, and project pages.`}
+      ? `進行中・発表済みの研究プロジェクト${projects.length}件です。各カードから論文・コード・プロジェクトページに直接アクセスできます。`
+      : `${projects.length} ongoing and published projects. Every card links straight to the paper, code, and project page.`}
   />
 
   <!-- Filters -->
@@ -73,66 +85,107 @@ const description = ja
           <span class="font-mono text-[11px] font-medium opacity-60">{f.count}</span>
         </button>
       ))}
+
+      <!-- Year jump links keep a long timeline navigable -->
+      <div class="ml-auto hidden items-center gap-1.5 lg:flex">
+        <span class="mr-1 text-xs font-bold uppercase tracking-widest text-navy-500">{ja ? "年" : "Year"}</span>
+        {years.map((y) => (
+          <a
+            href={`#y${y}`}
+            class="year-jump rounded-md px-2 py-1 font-mono text-xs font-bold text-navy-600 transition-colors hover:bg-paper-300 hover:text-navy-900"
+          >
+            {y}
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-5 py-16 md:py-20">
-    <div class="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
-      {projects.map((p) => (
-        <a
-          href={`${base}/${locale}/projects/${p.id}`}
-          class="project-card paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1"
-          data-category={categoryOf(p)}
-          data-highlight={p.data.highlight ? "true" : "false"}
-        >
-          {p.data.teaser && (
-            <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8 bg-paper-200/60">
-              <img
-                src={`${base}/projects/${p.data.teaser}`}
-                alt=""
-                loading="lazy"
-                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-          )}
+  <div class="mx-auto max-w-6xl px-5 py-14 md:py-16">
+    {byYear.map(({ year, items }) => (
+      <section id={`y${year}`} class="year-group mb-14 scroll-mt-32">
+        <div class="mb-7 flex items-baseline gap-4">
+          <h2 class="font-mono text-3xl font-bold text-navy-900">{year}</h2>
+          <span class="year-count font-mono text-sm text-navy-500">{items.length}</span>
+          <span class="h-px flex-1 bg-navy-900/10"></span>
+        </div>
 
-          <div class="flex flex-1 flex-col p-6">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="font-mono text-xs font-bold text-coral-600">{p.data.venue} {p.data.year}</span>
-              <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", statusLabels[p.data.status].cls]}>
-                {ja ? statusLabels[p.data.status].ja : statusLabels[p.data.status].en}
-              </span>
-              {p.data.highlight && (
-                <span class="rounded-full bg-sand-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-800">★</span>
-              )}
-            </div>
+        <div class="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
+          {items.map((p) => (
+            <article
+              class="project-card paper-card paper-card-hover group flex flex-col overflow-hidden rounded-3xl border border-navy-900/8 bg-paper-50 transition-all duration-300 hover:-translate-y-1"
+              data-category={categoryOf(p)}
+              data-highlight={p.data.highlight ? "true" : "false"}
+            >
+              <a href={`${base}/${locale}/projects/${p.id}`} class="block">
+                <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8">
+                  <ProjectTeaser
+                    title={p.data.short_title}
+                    venue={p.data.venue}
+                    year={p.data.year}
+                    category={categoryOf(p)}
+                    seed={p.id}
+                    class="h-full w-full transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+              </a>
 
-            <h2 class="mt-3 text-lg font-bold leading-snug tracking-tight text-navy-900 group-hover:text-coral-600">
-              {p.data.short_title}
-            </h2>
-            <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600 line-clamp-4">
-              {ja ? p.data.description_ja : p.body?.trim().split("\n").join(" ")}
-            </p>
+              <div class="flex flex-1 flex-col p-6">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class:list={["rounded-full px-2.5 py-0.5 text-[11px] font-bold", statusLabels[p.data.status].cls]}>
+                    {ja ? statusLabels[p.data.status].ja : statusLabels[p.data.status].en}
+                  </span>
+                  {p.data.highlight && (
+                    <span class="rounded-full bg-sand-300/70 px-2.5 py-0.5 text-[11px] font-bold text-navy-800">★</span>
+                  )}
+                </div>
 
-            <div class="mt-5 flex flex-wrap gap-1.5">
-              {p.data.tags.map((tag) => (
-                <span class="rounded-full bg-paper-200 px-2.5 py-0.5 text-[11px] font-medium text-navy-600">{tag}</span>
-              ))}
-            </div>
-          </div>
-        </a>
-      ))}
-    </div>
+                <h3 class="mt-3 text-lg font-bold leading-snug tracking-tight text-navy-900">
+                  <a href={`${base}/${locale}/projects/${p.id}`} class="hover:text-coral-600">
+                    {p.data.short_title}
+                  </a>
+                </h3>
+                <p class="mt-3 flex-1 text-sm leading-relaxed text-navy-600 line-clamp-4">
+                  {ja ? p.data.description_ja : p.body?.trim().split("\n").join(" ")}
+                </p>
+
+                <!-- Straight to the paper, code or project site without a detour -->
+                <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-navy-900/8 pt-4">
+                  {Object.entries(p.data.links).map(([key, href]) => (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-paper-200 px-2.5 py-1.5 text-xs font-bold text-navy-700 transition-colors hover:bg-coral-300/40 hover:text-coral-600"
+                    >
+                      {key === "code" ? <Icon name="github" class="h-3.5 w-3.5" /> : <Icon name="external" class="h-3 w-3" />}
+                      {linkLabels[key] ?? key}
+                    </a>
+                  ))}
+                  <a
+                    href={`${base}/${locale}/projects/${p.id}`}
+                    class="ml-auto text-xs font-bold text-coral-600 hover:underline"
+                  >
+                    {s.common.readMore} →
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
 
     <p id="empty-state" class="hidden py-16 text-center text-navy-500">
       {ja ? "該当するプロジェクトがありません。" : "No projects match this filter."}
     </p>
-  </section>
+  </div>
 </Layout>
 
 <script>
   const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
   const cards = document.querySelectorAll<HTMLElement>(".project-card");
+  const groups = document.querySelectorAll<HTMLElement>(".year-group");
   const empty = document.getElementById("empty-state");
 
   function apply(filter: string) {
@@ -154,6 +207,14 @@ const description = ja
       }
       card.classList.toggle("hidden", !show);
       if (show) visible++;
+    });
+
+    // A year heading disappears once every project under it is filtered out.
+    groups.forEach((group) => {
+      const shown = group.querySelectorAll(".project-card:not(.hidden)").length;
+      group.classList.toggle("hidden", shown === 0);
+      const count = group.querySelector(".year-count");
+      if (count) count.textContent = String(shown);
     });
 
     empty?.classList.toggle("hidden", visible > 0);
