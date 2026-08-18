@@ -1,14 +1,17 @@
 ---
+import { Image } from "astro:assets";
 import Icon from "./Icon.astro";
 import type { Member } from "../data/members";
+import { memberPhotos } from "../data/photos";
 
 interface Props {
   member: Member;
 }
 
 const { member } = Astro.props;
+const photo = memberPhotos[member.name];
 
-/** Deterministic warm tint per member so the initial avatars form a coherent set. */
+/** Deterministic warm tint so the fallback initial avatars form a coherent set. */
 const tints = [
   "bg-coral-300/35 text-coral-600",
   "bg-sand-300/50 text-navy-700",
@@ -24,31 +27,47 @@ const initials = member.name
   .join("");
 ---
 
-<div class="paper-card flex flex-col rounded-2xl bg-paper-50 p-6">
-  <div class="flex items-center gap-4">
-    <span class:list={["grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-lg font-bold", tint]}>
-      {initials}
-    </span>
-    <div class="min-w-0">
-      <h3 class="truncate font-bold tracking-tight text-navy-900">{member.name}</h3>
-      {member.team && <p class="mt-0.5 text-xs font-medium text-navy-500">{member.team} team</p>}
-    </div>
+<div class="group flex flex-col items-center text-center">
+  <div class="relative">
+    <!-- Soft ring that warms on hover, keeping the portraits from feeling clinical. -->
+    <div class="absolute -inset-1 rounded-full bg-coral-300/0 transition-colors duration-300 group-hover:bg-coral-300/40"></div>
+    {photo ? (
+      <Image
+        src={photo}
+        alt={member.name}
+        widths={[112, 224]}
+        sizes="112px"
+        class="relative h-24 w-24 rounded-full object-cover object-top ring-2 ring-paper-50 md:h-28 md:w-28"
+      />
+    ) : (
+      <span
+        class:list={[
+          "relative grid h-24 w-24 place-items-center rounded-full text-xl font-bold ring-2 ring-paper-50 md:h-28 md:w-28",
+          tint,
+        ]}
+      >
+        {initials}
+      </span>
+    )}
   </div>
 
+  <h3 class="mt-4 text-sm font-bold leading-snug tracking-tight text-navy-900">{member.name}</h3>
+  {member.team && <p class="mt-0.5 text-[11px] font-medium text-navy-500">{member.team}</p>}
+
   {member.comment && (
-    <p class="mt-4 text-sm leading-relaxed text-navy-600">「{member.comment}」</p>
+    <p class="mt-2 text-xs leading-relaxed text-navy-600">「{member.comment}」</p>
   )}
 
   {(member.mail || member.github) && (
-    <div class="mt-4 flex items-center gap-3 pt-1">
+    <div class="mt-3 flex items-center gap-2.5">
       {member.mail && (
-        <a href={`mailto:${member.mail}`} aria-label={`Email ${member.name}`} class="text-navy-500 transition-colors hover:text-coral-600">
-          <Icon name="mail" class="h-4 w-4" />
+        <a href={`mailto:${member.mail}`} aria-label={`Email ${member.name}`} class="text-navy-400 transition-colors hover:text-coral-600">
+          <Icon name="mail" class="h-3.5 w-3.5" />
         </a>
       )}
       {member.github && (
-        <a href={member.github} target="_blank" rel="noopener" aria-label={`GitHub of ${member.name}`} class="text-navy-500 transition-colors hover:text-coral-600">
-          <Icon name="github" class="h-4 w-4" />
+        <a href={member.github} target="_blank" rel="noopener" aria-label={`GitHub of ${member.name}`} class="text-navy-400 transition-colors hover:text-coral-600">
+          <Icon name="github" class="h-3.5 w-3.5" />
         </a>
       )}
     </div>

@@ -19,10 +19,21 @@ const locale = Astro.params.locale as Locale;
 const s = t(locale);
 const ja = locale === "ja";
 
-const visuals: Record<string, ImageMetadata> = {
-  "edge-computing": edgeVisual,
-  "autonomous-driving-security": mainVisual,
-  "lidar-3d-sensing": healthVisual,
+/**
+ * The three illustrations have very different aspect ratios (main is a wide
+ * scene, edge and health are tall cutouts), so each sits on a fixed square
+ * stage. Cutouts are contained with padding; the wide scene is cropped into
+ * its vehicle area so it reads differently from the homepage hero.
+ */
+const visuals: Record<string, { src: ImageMetadata; fit: "contain" | "cover"; position?: string; tint: string }> = {
+  "edge-computing": { src: edgeVisual, fit: "contain", tint: "from-sky-200/60 to-paper-200" },
+  "autonomous-driving-security": {
+    src: mainVisual,
+    fit: "cover",
+    position: "28% 42%",
+    tint: "from-coral-300/30 to-paper-200",
+  },
+  "lidar-3d-sensing": { src: healthVisual, fit: "contain", tint: "from-sand-300/40 to-paper-200" },
 };
 
 const description = ja
@@ -45,7 +56,7 @@ const description = ja
       class:list={["scroll-mt-20 border-b border-navy-900/8", i % 2 === 1 && "bg-paper-200/50"]}
     >
       <div class="mx-auto max-w-6xl px-5 py-20 md:py-24">
-        <div class:list={["grid items-start gap-12 lg:grid-cols-2 lg:gap-16", i % 2 === 1 && "lg:[&>*:first-child]:order-2"]}>
+        <div class:list={["grid items-start gap-10 lg:grid-cols-[1.6fr_1fr] lg:gap-16", i % 2 === 1 && "lg:[&>*:first-child]:order-2"]}>
           <div>
             <div class="flex items-center gap-3">
               <span class="grid h-12 w-12 place-items-center rounded-2xl bg-coral-300/25 text-coral-600">
@@ -107,14 +118,22 @@ const description = ja
             </a>
           </div>
 
-          <div class="relative">
-            <div class="absolute -inset-5 rounded-[2.5rem] bg-sand-300/20 blur-2xl"></div>
+          <div
+            class:list={[
+              "relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-[2rem] bg-gradient-to-br lg:sticky lg:top-24",
+              visuals[theme.slug].tint,
+            ]}
+          >
             <Image
-              src={visuals[theme.slug]}
+              src={visuals[theme.slug].src}
               alt=""
-              widths={[500, 900]}
-              sizes="(min-width: 1024px) 520px, 100vw"
-              class="relative w-full rounded-3xl"
+              widths={[380, 760]}
+              sizes="(min-width: 1024px) 380px, 90vw"
+              style={visuals[theme.slug].position ? `object-position: ${visuals[theme.slug].position}` : undefined}
+              class:list={[
+                "h-full w-full",
+                visuals[theme.slug].fit === "contain" ? "object-contain p-8" : "object-cover",
+              ]}
             />
           </div>
         </div>

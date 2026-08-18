@@ -1,8 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
 import PageHero from "../../components/PageHero.astro";
 import MemberCard from "../../components/MemberCard.astro";
 import Icon from "../../components/Icon.astro";
+import { piPhoto, groupPhotos } from "../../data/photos";
 import {
   pi,
   phdStudents,
@@ -52,10 +54,14 @@ const description = ja
       <h2 class="text-xs font-bold uppercase tracking-widest text-navy-500">PI</h2>
 
       <div class="mt-7 grid gap-10 lg:grid-cols-[auto_1fr] lg:gap-14">
-        <div class="flex items-start gap-5">
-          <span class="grid h-24 w-24 shrink-0 place-items-center rounded-3xl bg-navy-800 text-2xl font-bold text-sand-300">
-            KY
-          </span>
+        <div class="flex items-center gap-5">
+          <Image
+            src={piPhoto}
+            alt={pi.name}
+            widths={[144, 288]}
+            sizes="144px"
+            class="h-32 w-32 shrink-0 rounded-full object-cover object-top ring-4 ring-paper-50 md:h-36 md:w-36"
+          />
           <div class="lg:hidden">
             <h3 class="text-2xl font-bold tracking-tight text-navy-900">{pi.name}</h3>
             <p class="mt-1 text-sm font-medium text-navy-600">{ja ? pi.title.ja : pi.title.en}</p>
@@ -103,7 +109,7 @@ const description = ja
           {ja ? g.title.ja : g.title.en}
           <span class="ml-3 font-mono text-sm font-medium text-navy-500">{g.members.length}</span>
         </h2>
-        <div class="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-9 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
           {g.members.map((m) => <MemberCard member={m} />)}
         </div>
       </section>
@@ -140,4 +146,25 @@ const description = ja
       </ul>
     </section>
   </div>
+
+  <!-- Group photos -->
+  <section class="border-t border-navy-900/8 bg-paper-200/50">
+    <div class="mx-auto max-w-6xl px-5 py-16 md:py-20">
+      <h2 class="text-2xl font-bold tracking-tight text-navy-900">{ja ? "集合写真" : "Group photos"}</h2>
+      <div class="mt-8 grid gap-6 md:grid-cols-3">
+        {groupPhotos.map((g) => (
+          <figure>
+            <Image
+              src={g.src}
+              alt={ja ? g.caption.ja : g.caption.en}
+              widths={[400, 800]}
+              sizes="(min-width: 768px) 360px, 90vw"
+              class="paper-card w-full rounded-2xl object-cover"
+            />
+            <figcaption class="mt-3 text-xs text-navy-500">{ja ? g.caption.ja : g.caption.en}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
 </Layout>
