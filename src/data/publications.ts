@@ -27,13 +27,17 @@ export const publications: Publication[] = [
     title: "MCRA: Multi-Column Residue Accumulation Analog Compute-in-Memory Architecture with Time-Domain M-Input ΣΔ ADC",
     venue: "IEEE Transactions on Very Large Scale Integration (VLSI) Systems",
     year: 2026, type: "journal", category: "computing",
+    links: [{ label: "Paper", href: "https://ieeexplore.ieee.org/document/11421079" }],
   },
   {
     authors: "W. Zhang, S. Ando, Y.-C. Chen, K. Yoshioka",
     title: "ASiM: Improving Transparency of SRAM-based Analog Compute-in-Memory Research with an Open-Source Simulation Framework",
     venue: "IEEE Transactions on Very Large Scale Integration (VLSI) Systems",
     year: 2026, type: "journal", category: "computing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }, { label: "GitHub", href: "https://github.com/" }],
+    links: [
+      { label: "Paper", href: "https://doi.org/10.1109/tvlsi.2025.3605286" },
+      { label: "GitHub", href: "https://github.com/Keio-CSG/ASiM" },
+    ],
   },
   {
     authors: "S. Ando, Y.-C. Chen, S. Miyagi, W. Zhang, K. Yoshioka",
@@ -60,6 +64,10 @@ export const publications: Publication[] = [
     title: "LiDAR Beacon: 300 m-Range Fiducial Marker for Mobile Robot Localization with Dual Temporal Range–Reflectance Modulation",
     venue: "IEEE Sensors Journal",
     year: 2026, type: "journal", category: "sensing",
+    links: [
+      { label: "Paper", href: "https://ieeexplore.ieee.org/document/11410042/" },
+      { label: "Press", href: "https://www.keio.ac.jp/ja/press-release/20260324-1/" },
+    ],
   },
   {
     authors: "K. Ikeda, Y. Hayakawa, R. Suzuki, S. Nagai, O. Sako, R. Nagata, R. Yoshida, K. Yoshioka",
@@ -214,6 +222,12 @@ export const publications: Publication[] = [
 
   // ---- International conferences: Computing ----
   {
+    authors: "W. Zhang, J. Yin, K. Yoshioka",
+    title: "Detect in Any Scene: An Agentic Framework for Object Detection with Experience-Aware Reasoning",
+    venue: "arXiv preprint", year: 2026, type: "conference", category: "computing",
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2605.31174" }],
+  },
+  {
     authors: "R. Sugawara, K. Yoshioka",
     title: "The First CMOS-Integrated Stochastic Processing Unit for Scalable Thermodynamic Computing in 65nm with 1000x Power Efficiency Improvement",
     venue: "SSDM", year: 2026, type: "conference", category: "computing",
@@ -233,13 +247,17 @@ export const publications: Publication[] = [
     title: "D4C: Data-free Quantization for Contrastive Language-Image Pre-training Models",
     venue: "CVPR (Findings)", year: 2026, type: "conference", category: "computing",
     accRate: "30%",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2511.15411" }],
   },
   {
     authors: "W. Zhang, X. Li, S. Ando, K. Yoshioka",
     title: "BitROM: Weight Reload-Free CiROM Architecture Towards Billion-Parameter 1.58-bit LLM Inference",
     venue: "ASP-DAC", year: 2026, type: "conference", category: "computing",
     award: "Excellent Student Author Award",
+    links: [
+      { label: "arXiv", href: "https://arxiv.org/abs/2509.08542" },
+      { label: "GitHub", href: "https://github.com/Wenlun-Zhang/BitROM" },
+    ],
   },
   {
     authors: "Y. Yan, S. Li, W. Zhang, X. Si, K. Yoshioka",
@@ -251,7 +269,7 @@ export const publications: Publication[] = [
     authors: "W. Zhang, Y. Zhong, S. Ando, K. Yoshioka",
     title: "AHCPTQ: Accurate and Hardware-Compatible Post-Training Quantization for Segment Anything Model",
     venue: "ICCV", year: 2025, type: "conference", category: "computing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }, { label: "GitHub", href: "https://github.com/" }],
+    links: [{ label: "Paper", href: "https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_AHCPTQ_Accurate_and_Hardware-Compatible_Post-Training_Quantization_for_Segment_Anything_Model_ICCV_2025_paper.pdf" }, { label: "GitHub", href: "https://github.com/Keio-CSG/AHCPTQ" }],
   },
   {
     authors: "S. Ando, S. Miyagi, W. Zhang, Y.-C. Chen, K. Yoshioka",
@@ -278,30 +296,34 @@ export const publications: Publication[] = [
     authors: "W. Zhang, S. Ando, Y.-C. Chen, S. Miyagi, S. Takamaeda-Yamazaki, K. Yoshioka",
     title: "PACiM: A Sparsity-Centric Hybrid Compute-in-Memory Architecture via Probabilistic Approximation",
     venue: "ICCAD", year: 2024, type: "conference", category: "computing", accRate: "24%",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }, { label: "GitHub", href: "https://github.com/" }],
+    links: [{ label: "Paper", href: "https://dl.acm.org/doi/10.1145/3676536.3676704" }, { label: "GitHub", href: "https://github.com/Keio-CSG/PACiM" }],
   },
   {
     authors: "Y.-C. Chen, S. Ando, D. Fujiki, S. Takamaeda-Yamazaki, K. Yoshioka",
     title: "HALO-CAT: A Hidden Network Processor with Activation-LOcalized CIM Architecture and Layer-Penetrative Tiling",
     venue: "arXiv preprint", year: 2024, type: "conference", category: "computing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2312.06086" }],
   },
   {
     authors: "K. Yoshioka",
     title: "A 818-4094 TOPS/W Capacitor-Reconfigured CIM Macro for Unified Acceleration of CNNs and Transformers",
     venue: "ISSCC", year: 2024, type: "conference", category: "computing", accRate: "26%",
+    links: [{ label: "Paper", href: "https://ieeexplore.ieee.org/document/10689660" }, { label: "Press", href: "https://www.jst.go.jp/pr/announce/20240219/" }],
   },
   {
     authors: "Y.-C. Chen, S. Ando, D. Fujiki, S. Takamaeda-Yamazaki, K. Yoshioka",
     title: "OSA-HCIM: On-The-Fly Saliency-Aware Hybrid SRAM CIM with Dynamic Precision Configuration",
     venue: "IEEE ASP-DAC", year: 2024, type: "conference", category: "computing", accRate: "29%",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2308.15040" }],
   },
   {
     authors: "K. Yoshioka, E. Lee, S. Wong, M. Horowitz",
     title: "Dataset Culling: Towards Efficient Training of Distillation-Based Domain Specific Models",
     venue: "IEEE ICIP, pp.3237-3241", year: 2019, type: "conference", category: "computing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }, { label: "GitHub", href: "https://github.com/" }],
+    links: [
+      { label: "arXiv", href: "https://arxiv.org/abs/1902.00173" },
+      { label: "GitHub", href: "https://github.com/kentaroy47/DatasetCulling" },
+    ],
   },
   {
     authors: "Y. Toyama, K. Yoshioka, K. Ban, A. Sai, K. Onizuka",
@@ -315,6 +337,18 @@ export const publications: Publication[] = [
   },
 
   // ---- International conferences: Sensing ----
+  {
+    authors: "M. Watanabe, T. Sato, K. Yoshioka",
+    title: "Lights, Camera, Malfunction: When Illumination Robustness Leaves VLA Models Blind to Color",
+    venue: "arXiv preprint", year: 2026, type: "conference", category: "sensing",
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2607.14698" }],
+  },
+  {
+    authors: "R. Yoshida, T. Sato, W. Zhang, Y. Hayakawa, S. Nagai, T. Kado, T. Beppu, K. Yoshioka",
+    title: "Neural Reconstruction of LiDAR Point Clouds under Jamming Attacks via Full-Waveform Representation and Simultaneous Laser Sensing",
+    venue: "arXiv preprint", year: 2026, type: "conference", category: "sensing",
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2604.00371" }],
+  },
   {
     authors: "T. Ishizue, N. Costagliola, S. Varma, O. Sako, K. Yoshioka, T. Sugawara, S. Rampazzi",
     title: "Demo: Controlling Depth Estimation in Stereo Cameras with Projected Patterns",
@@ -336,24 +370,30 @@ export const publications: Publication[] = [
     title: "Ghost-FWL: A Large-Scale Full-Waveform LiDAR Dataset for Ghost Detection and Removal",
     venue: "CVPR (Main)", year: 2026, type: "conference", category: "sensing", accRate: "25%",
     note: "* co-first authors · Collaboration with Isogawa Group and Sony",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [
+      { label: "Paper", href: "https://openaccess.thecvf.com/content/CVPR2026/papers/Ikeda_Ghost-FWL_A_Large-Scale_Full-Waveform_LiDAR_Dataset_for_Ghost_Detection_and_CVPR_2026_paper.pdf" },
+      { label: "arXiv", href: "https://arxiv.org/abs/2603.28224" },
+      { label: "GitHub", href: "https://github.com/Keio-CSG/Ghost-FWL" },
+      { label: "Project", href: "https://keio-csg.github.io/Ghost-FWL/" },
+    ],
   },
   {
     authors: "R. Nagata, K. Koide, K. Ikeda, O. Sako, K. Yoshioka",
     title: "D-SLAMSpoof: An Environment-Agnostic LiDAR Spoofing Attack using Dynamic Point Cloud Injection",
     venue: "IROS", year: 2026, type: "conference", category: "sensing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2603.11365" }],
   },
   {
     authors: "R. Nagata, K. Koide, K. Ikeda, O. Sako, S. Horie, K. Yoshioka",
     title: "MirrorDrift: Actuated Mirror-Based Attacks on LiDAR SLAM",
     venue: "IROS", year: 2026, type: "conference", category: "sensing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2603.11364" }],
   },
   {
     authors: "R. Hayashi, K. Torimi, R. Nagata, K. Ikeda, O. Sako, T. Nakamura, M. Tani, Y. Aoki, K. Yoshioka",
     title: "BasketLiDAR: The First LiDAR-Camera Multimodal Dataset for Professional Basketball MOT",
     venue: "MMSports", year: 2025, type: "conference", category: "sensing",
+    links: [{ label: "Project", href: "https://sites.google.com/keio.jp/keio-csg/projects/basket-lidar" }, { label: "GitHub", href: "https://github.com/Keio-CSG/BasketLiDAR" }],
   },
   {
     authors: "R. Yoshida, T. Sato, Y. Hayakawa, R. Suzuki, K. Ikeda, O. Sako, R. Nagata, K. Yoshioka",
@@ -364,14 +404,14 @@ export const publications: Publication[] = [
     authors: "R. Nagata, K. Koide, Y. Hayakawa, R. Suzuki, K. Ikeda, O. Sako, Q. Chen, T. Sato, K. Yoshioka",
     title: "SLAMSpoof: Practical LiDAR Spoofing Attacks on Localization Systems Guided by Scan Matching Vulnerability Analysis",
     venue: "IEEE ICRA", year: 2025, type: "conference", category: "sensing", accRate: "38%",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }, { label: "GitHub", href: "https://github.com/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2502.13641" }, { label: "GitHub", href: "https://github.com/Keio-CSG/slamspoof" }],
   },
   {
     authors: "T. Sato*, R. Suzuki*, Y. Hayakawa*, K. Ikeda, O. Sako, R. Nagata, R. Yoshida, Q. Chen, K. Yoshioka",
     title: "On the Realism of LiDAR Spoofing Attacks against Autonomous Driving Vehicle at High Speed and Long Distance",
     venue: "NDSS", year: 2025, type: "conference", category: "sensing", accRate: "15%",
     note: "* co-first authors",
-    links: [{ label: "Paper", href: "https://www.ndss-symposium.org/" }],
+    links: [{ label: "Paper", href: "https://www.ndss-symposium.org/wp-content/uploads/2025-628-paper.pdf" }, { label: "Project", href: "https://sites.google.com/keio.jp/keio-csg/projects/AttackonDrivingVehicle" }, { label: "Press", href: "https://www.jst.go.jp/pr/announce/20250225-2/pdf/20250225-2.pdf" }],
   },
   {
     authors: "O. Sako, T. Sato, Y. Hayakawa, R. Suzuki, K. Ikeda, R. Nagata, Q. Chen, K. Yoshioka",
@@ -393,7 +433,7 @@ export const publications: Publication[] = [
     title: "LiDAR Spoofing Meets the New-Gen: Capability Improvements, Broken Assumptions, and New Attack Strategies",
     venue: "NDSS", year: 2024, type: "conference", category: "sensing", accRate: "15%",
     note: "* co-first authors",
-    links: [{ label: "Paper", href: "https://www.ndss-symposium.org/" }],
+    links: [{ label: "Paper", href: "https://www.ndss-symposium.org/ndss-paper/lidar-spoofing-meets-the-new-gen-capability-improvements-broken-assumptions-and-new-attack-strategies/" }, { label: "Project", href: "https://sites.google.com/keio.jp/keio-csg/projects/new-gen-lidar-sec" }, { label: "Press", href: "https://www.jst.go.jp/pr/announce/20240213-3/index.html" }],
   },
   {
     authors: "T. Sato*, Y. Hayakawa*, R. Suzuki*, Y. Shiiki*, K. Yoshioka, Q. Chen",
@@ -411,7 +451,7 @@ export const publications: Publication[] = [
     authors: "K. Yoshioka, H. Okuni, T. T. Ta, A. Sai",
     title: "Through the Looking Glass: Diminishing Occlusions in Robot Vision Systems with Mirror Reflections",
     venue: "IEEE IROS", year: 2021, type: "conference", category: "sensing",
-    links: [{ label: "arXiv", href: "https://arxiv.org/" }],
+    links: [{ label: "arXiv", href: "https://arxiv.org/abs/2108.13599" }],
   },
   {
     authors: "T. T. Ta, H. Kubota, K. Kokubun, T. Sugimoto, M. Hirono, M. Sengoku, H. Katagiri, H. Okuni, S. Kondo, S. Ohtsuka, H. Kwon, K. Sasaki, Y. Ota, K. Suzuki, K. Kimura, K. Yoshioka, A. Sai, N. Matsumoto",
