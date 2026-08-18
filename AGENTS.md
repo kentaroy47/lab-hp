@@ -1,22 +1,23 @@
-## Development
+# AGENTS
 
-When starting the dev server, use background mode:
+**プロジェクトの手引きは [CLAUDE.md](./CLAUDE.md) にあります。** 作業前にそちらを読んでください。
 
-```
-astro dev --background
-```
+内容が二重管理にならないよう、このファイルには要点だけを置いています。
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+## 特に注意すること
 
-## Documentation
+- **クラウド同期フォルダ（Google Drive）に移動しないこと。** `npm install` が壊れ、
+  `astro` が終了コード0のまま何も生成せずに終わる
+- dev サーバーは Astro 7 が自動でバックグラウンド化する。起動前に `npx astro dev status` を確認
+- 色は Tailwind の任意色ではなく `src/styles/global.css` の `@theme` トークンを使う
+- コンテンツはテンプレートに直書きせず `src/data/*.ts` か `src/content/projects/*.md` に置く
+- 日本語版だけでなく**英語版の文言も必ず入れる**
 
-Full documentation: https://docs.astro.build
+## Astro docs
 
-Consult these guides before working on related tasks:
-
-- [Adding pages, dynamic routes, or middleware](https://docs.astro.build/en/guides/routing/)
-- [Working with Astro components](https://docs.astro.build/en/basics/astro-components/)
-- [Using React, Vue, Svelte, or other framework components](https://docs.astro.build/en/guides/framework-components/)
-- [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
-- [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
-- [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+- [Routing](https://docs.astro.build/en/guides/routing/)
+- [Components](https://docs.astro.build/en/basics/astro-components/)
+- [Content collections](https://docs.astro.build/en/guides/content-collections/)
+- [Images](https://docs.astro.build/en/guides/images/)
+- [Styling / Tailwind](https://docs.astro.build/en/guides/styling/)
+- [i18n](https://docs.astro.build/en/guides/internationalization/)

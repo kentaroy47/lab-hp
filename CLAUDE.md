@@ -1,93 +1,301 @@
 # Keio CSG — Lab Website
 
 慶應義塾大学 理工学部 吉岡研究室 (Computing and Sensing Group) の研究室サイト。
-Google Sites 版 (https://sites.google.com/keio.jp/keio-csg/) の内容を保持しつつ刷新したもの。
+旧 Google Sites 版 (https://sites.google.com/keio.jp/keio-csg/) の内容を保持しつつ刷新したもの。
 
-## Important: where this project lives
+- 公開URL: **https://kentaroy47.github.io/lab-hp/**
+- リポジトリ: https://github.com/kentaroy47/lab-hp
+- 作業ディレクトリ: `C:\Users\kyosh\OneDrive\Documents\Codes\lab-hp`
 
-**このプロジェクトは `C:\Users\kyosh\OneDrive\Documents\Codes\lab-hp` に置くこと。**
-Google Drive 同期フォルダ (`G:\マイドライブ\...`) では npm install が `TAR_ENTRY_ERROR` で壊れ、
-astro が無言で終了してビルドできない。元の Drive フォルダには `figs/` の原本が残っている。
+---
 
-## Stack
+## ⚠️ 最初に読むこと
 
-- **Astro 7** (静的出力) + **Tailwind CSS v4** (`@tailwindcss/vite`、設定ファイルなしで `src/styles/global.css` の `@theme` に定義)
-- `@astrojs/sitemap` で sitemap 生成
-- ビルド成果物は純粋な静的 HTML/CSS/JS
+**このプロジェクトをクラウド同期フォルダ (Google Drive の `G:\マイドライブ\...`) に置かないこと。**
+Drive 上では `npm install` が `TAR_ENTRY_ERROR` を多発して壊れ、`astro` が終了コード0のまま
+無言で何もせず終わる（`dist/` が生成されない）という分かりにくい壊れ方をする。
+OneDrive 上の現在地では問題なく動く。原本のイラストだけ Drive の `figs/` にも残っている。
+
+---
 
 ## Commands
 
 ```
-npm run dev      # dev サーバー (Astro 7 は自動でバックグラウンド化)
+npm install
+npm run dev      # dev サーバー。Astro 7 は自動でバックグラウンド化する
 npm run build    # 静的ビルド → dist/
 npm run preview  # ビルド結果のプレビュー
-npx astro dev status / stop / logs   # バックグラウンド dev サーバーの管理
+
+npx astro dev status    # バックグラウンド dev サーバーの状態
+npx astro dev stop      # 停止
+npx astro dev logs      # ログ
 ```
 
-## Routing / i18n
+`npm run dev` はプロンプトが返ってきても裏で動き続ける。二重起動する前に `astro dev status` を見ること。
 
-日英バイリンガル。Astro の i18n ルーティングで `prefixDefaultLocale: true`。
+---
+
+## よくある更新作業
+
+### ニュースを追加する
+
+`src/data/news.ts` の配列**先頭**に追加。トップページは上位6件、`/news` は年別に全件表示する。
+
+```ts
+{ date: "2026-09", tag: "paper", ja: "◯◯くんの論文が△△に採択されました！", en: "..." },
+```
+
+`tag` は `award | paper | grant | press | lab`。日英どちらも必須（英語版ページで表示される）。
+
+### 論文を追加する
+
+`src/data/publications.ts` の `publications` 配列に追加。順序は不問（ページ側で年降順ソート）。
+
+```ts
+{
+  authors: "W. Zhang, K. Yoshioka",
+  title: "...",
+  venue: "IEEE Journal of Solid-State Circuits",
+  year: 2026,
+  type: "journal",        // journal | conference | domestic
+  category: "computing",  // computing | sensing | analog | review
+  accRate: "25%",         // 任意
+  award: "Best Paper Award", // 任意
+  note: "* co-first authors", // 任意
+  links: [{ label: "arXiv", href: "https://arxiv.org/abs/..." }],
+}
+```
+
+同ファイル内に `awards` / `grants` / `sponsors` / `mediaCoverage` / `patentsUrl` もある。
+受賞は**学生本人の受賞**なら `src/data/highlights.ts` の `studentAwards` にも追加すること（Recruit の訴求で使う）。
+
+### プロジェクトを追加する
+
+**`src/content/projects/` に `.md` を置くだけ。** Astro のコンテンツコレクションなので、
+一覧・詳細ページ・タグフィルタ・関連プロジェクトは自動生成される。
+frontmatter のスキーマは `src/content.config.ts` に定義済みで、間違えるとビルドが型エラーで落ちる。
+
+```markdown
+---
+title: "フルタイトル"
+short_title: "短縮名"          # カード見出しに使う
+venue: CVPR
+year: 2026
+status: accepted               # published | accepted | preprint
+section: Sensor                # Circuit | Sensor
+teaser: foo-teaser.svg         # public/projects/ に置いたファイル名のみ
+highlight: true                # 任意。★バッジが付く
+authors:
+  - name: "K. Ikeda"
+    me: true                   # 研究室メンバーは true → 詳細ページで太字
+  - name: "M. Isogawa"         # 外部共著者は me なし
+tags: [LiDAR, Dataset]
+links:
+  arxiv: https://arxiv.org/abs/...
+  code: https://github.com/...
+  paper: https://...
+  project: https://...
+  press: https://...
+description_ja: "日本語の概要。日本語版ページで表示される。"
+order: 1                       # 任意。同年内での並び順（小さいほど上）
+---
+
+English description here. 英語版ページの本文になる。Markdown が使える。
+```
+
+ティーザー画像は `public/projects/` に置く（SVG はベクタなので Astro の最適化は不要）。
+このデータは https://github.com/Keio-CSG/LabProjectPage から取り込んだもので、
+frontmatter の形式はそちらと互換にしてある。
+
+### メンバーを追加・卒業させる
+
+1. `src/data/members.ts` の該当配列（`phdStudents` / `masterStudents` / `bachelorStudents` /
+   `researchMembers` / `staff`）に追加。卒業したら `alumni` へ移す（進路 `destination` を記入）
+2. 写真があれば `src/assets/members/` に置き、`src/data/photos.ts` の `memberPhotos` に1行追加
+
+```ts
+"Taro Keio": taroKeio,   // 上部で import taroKeio from "../assets/members/taro-keio.jpg"
+```
+
+**キーは `members.ts` の `name` と完全一致させること。** 一致しないと写真が出ずイニシャル
+アバターにフォールバックする（エラーにはならないので気付きにくい）。
+写真がないメンバーは暖色系のイニシャルアバターが自動生成されるので、無理に用意しなくてよい。
+
+### 研究テーマを変更する
+
+`src/data/research.ts`。3テーマそれぞれに `title` / `summary` / `projects` / `achievements` /
+`collaborators` がある。テーマを増やす場合は `src/pages/[locale]/research.astro` の `visuals`
+マップに画像とトリミング設定も追加が必要。
+
+### 説明会の日程を更新する
+
+`src/data/recruit.ts` の `infoSessions`（`year` と `slots`）。`updated` の日付も直すこと。
+
+### 研究室の訴求内容を変える
+
+`src/data/highlights.ts`。トップと Recruit の両方から参照される。
+
+| 項目 | 内容 |
+|---|---|
+| `whyCsg` | 「CSGで何が得られるか」6項目（実チップ試作／実車走行／国際共同研究／メディア掲載／ゼロから始められる／研究費） |
+| `studentAwards` | **学生本人**の受賞。「自分も獲れる」と思わせるための材料 |
+| `careerOutcomes` | 卒業生の進路 |
+| `openSource` | 公開している GitHub リポジトリ |
+| `facilities` | 使える設備 |
+
+B3・新M1 の獲得を意識して、実績の羅列ではなく「ここに来たら何ができるか」を具体物で
+示す方針で書いてある。この意図を壊さないこと。
+
+---
+
+## Architecture
+
+### Stack
+
+- **Astro 7**（静的出力）+ **Tailwind CSS v4**
+- Tailwind v4 は設定ファイルを持たない。**色やフォントは `src/styles/global.css` の `@theme` に定義する**
+- `@astrojs/sitemap` が `sitemap-index.xml` を生成
+- ビルド成果物は純粋な静的 HTML/CSS/JS（サーバー不要）
+
+### Routing / i18n
+
+日英バイリンガル。`prefixDefaultLocale: true` なので日本語も `/ja` 配下に出る。
 
 - `/lab-hp/ja/...`（既定）と `/lab-hp/en/...`
-- ページは `src/pages/[locale]/*.astro`。各ページで `getStaticPaths()` が `locales` を回す
+- ページは `src/pages/[locale]/*.astro`。各ページの `getStaticPaths()` が `locales` を回す
 - `src/pages/index.astro` はルートから `/ja` への meta refresh リダイレクト
-- UI 文言は `src/i18n/strings.ts`。**本文コンテンツは i18n ファイルではなくデータ層に `{ ja, en }` で持たせる**
+- ヘッダーの言語切替は**現在のページの対応する言語版**にリンクする（`Layout` に渡す `path` を使う）
 
-## Content lives in data, not in templates
+**文言の置き場所の使い分け:**
 
-ページを触らずに内容を更新できるよう、コンテンツは全て `src/data/` に構造化データとして置く。
-
-| ファイル | 内容 |
+| 種類 | 置き場所 |
 |---|---|
-| `site.ts` | 研究室名・住所・連絡先・居室 |
-| `research.ts` | 研究3テーマ（エッジ計算／自動運転セキュリティ／LiDAR 3Dセンシング） |
-| `publications.ts` | 論文 78件 + 受賞・競争的資金・メディア掲載・特許 |
-| `members.ts` | PI・博士・修士・学部生・共同研究員・スタッフ・卒業生 |
-| `projects.ts` | プロジェクト5件（一覧＋詳細ページを自動生成） |
-| `recruit.ts` | 説明会日程・研究トラック・文化・先輩の声・FAQ |
-| `news.ts` | ニュース（年別にページ側でグループ化） |
-| `highlights.ts` | **学生向け訴求**：CSGで得られるもの／学生受賞／進路／OSS／設備 |
+| ナビ・ボタンなどの UI 文言 | `src/i18n/strings.ts` |
+| 本文コンテンツ | `src/data/*.ts` に `{ ja: "...", en: "..." }` で持たせる |
+| ページ固有の短い文 | ページ内で `ja ? "..." : "..."` の三項演算子 |
 
-`highlights.ts` は B3・新M1 の獲得を意識した差別化要素（実チップの試作、実車走行、国際共同研究、
-メディア掲載、ゼロから始められる、研究費が潤沢）をまとめたもの。トップと Recruit の両方で使う。
+新しいページを追加するときは、必ず `getStaticPaths()` を書き、`Layout` に `locale` と
+`path`（`/research` のようなロケール抜きのパス）を渡すこと。`path` を間違えると言語切替が
+別ページに飛ぶ。
+
+### ディレクトリ
+
+```
+src/
+  content/projects/   プロジェクト .md（19件）← ここに置くだけで増える
+  content.config.ts   コレクションのスキーマ定義
+  data/               コンテンツデータ層（下表）
+  i18n/strings.ts     UI 文言
+  components/         Header / Footer / Icon / MemberCard / PageHero
+  layouts/Layout.astro  共通レイアウト + SEO メタ + JSON-LD
+  pages/[locale]/     各ページ
+  assets/             Astro が最適化する画像（イラスト・メンバー写真）
+  styles/global.css   デザイントークン + 独自ユーティリティ
+public/               そのまま配信される静的ファイル（ロゴ・OGP・ティーザーSVG・robots.txt）
+figs/                 イラスト原本（サイトからは直接参照しない）
+```
+
+| `src/data/` | 内容 |
+|---|---|
+| `site.ts` | 研究室名・住所・連絡先・居室番号 |
+| `research.ts` | 研究3テーマ |
+| `publications.ts` | 論文78件 + 受賞・競争的資金・メディア掲載・特許 |
+| `members.ts` | メンバー・卒業生 |
+| `photos.ts` | メンバー写真の import と名前→画像のマップ |
+| `recruit.ts` | 説明会日程・研究トラック・文化・先輩の声・FAQ |
+| `news.ts` | ニュース |
+| `highlights.ts` | 学生向け訴求 |
+
+---
 
 ## Design system
 
 `figs/` の手描きアイソメトリック・イラストから採色した**暖色系ライトテーマ**。
-以前ダークテーマだったが「冷たすぎる」との判断で全面変更した経緯がある。
+当初ダークテーマで作ったが「冷たすぎる」との判断で全面的に作り直した経緯がある。
+**この温かみを壊さないこと**（彩度の低いグレーや、真っ黒・真っ白を持ち込まない）。
 
-- 背景 `paper-*`（クリーム）／文字 `navy-*`（基板の紺）／アクセント `coral-*`（車の色）
-- 補助 `sand-*`（黄）・`sky-*`（空）
-- 色は `src/styles/global.css` の `@theme` に定義。Tailwind の任意色ではなくこのトークンを使う
-- `.paper-card` / `.paper-card-hover` / `.trace-grid` はそこに定義したユーティリティ
+| トークン | 用途 |
+|---|---|
+| `paper-*` | 背景（クリーム。`paper-100` が地、`paper-50` がカード） |
+| `navy-*` | 文字・濃い面（基板の紺） |
+| `coral-*` | アクセント（イラストの車の色）。リンク・強調・CTA |
+| `sand-*` | 補助（黄）。受賞・ハイライト |
+| `sky-*` | 補助（空）。セクション見出しの背景グラデーション |
 
-### Images
+- **Tailwind の任意色（`bg-[#...]` や `bg-slate-500`）は使わず、必ずこのトークンを使う**
+- `.paper-card` / `.paper-card-hover` / `.trace-grid` / `.animate-rise` / `.animate-float` は
+  `global.css` に定義した独自ユーティリティ
+- `prefers-reduced-motion` でアニメーションを止める指定が入っている
 
-- イラスト原本は `figs/`。使うものだけ `src/assets/` にコピーして `astro:assets` の `<Image>` で読む（自動で webp 最適化＋レスポンシブ）
-- `csg.png` はロゴ。ヘッダー・フッター・favicon（`public/csg.png`）に使用
-- `public/og-cover.webp` は OGP 用
+### 画像の扱い
+
+- `src/assets/` に置いたものは `astro:assets` の `<Image>` で読む → webp 変換・リサイズ・
+  レスポンシブ `srcset` が自動。**`<img>` タグを直に使わない**
+- `public/` に置いたものは最適化されない。SVG とロゴ・OGP のみここ
+- イラストは縦横比がバラバラ（`main.webp` は横長、`edge`/`health` は縦長の切り抜き）なので、
+  並べるときは**固定比率のステージに `object-contain` / `object-cover` で収める**こと。
+  そのまま並べると高さが揃わず崩れる
+- メンバー写真は画質・トリミングが不揃いなので、円形の小さいアバターにして粗を目立たせない
+  方針にしている
+
+---
 
 ## Deploy
 
-GitHub Pages 想定。`.github/workflows/deploy.yml` が `main` への push でビルド＆デプロイ。
+`main` に push すると `.github/workflows/deploy.yml` が走り、GitHub Pages に自動デプロイされる。
 
-**独自ドメイン (`csg.keio.jp` 等) に移す場合は `astro.config.mjs` の `site` と `base` を変更し、
-`public/robots.txt` の Sitemap URL も合わせて更新すること。**
+**GitHub Pages 側の設定は「Source: GitHub Actions」であること。**
+「Deploy from a branch」になっていると Jekyll がビルドしようとして失敗する（実際に一度踏んだ）。
+設定場所: https://github.com/kentaroy47/lab-hp/settings/pages
 
-## SEO (旧サイトからの移行時の注意)
+### 独自ドメインへの移行
 
-旧 Google Sites は Google 検索で上位にあるため、移行時は以下が必要:
+`csg.keio.jp` などに移す場合、以下3箇所をまとめて変更する:
 
-1. Search Console に新サイトを登録し `sitemap-index.xml` を送信
-2. 旧 Google Sites には自動リダイレクトが設定できないため、各ページ冒頭に移転告知リンクを手動設置
-3. Google Scholar・researchmap・学内ディレクトリ等の外部参照 URL を更新
-4. 順位が安定するまで旧サイトは残す
+1. `astro.config.mjs` の `site` と `base`（サブドメイン直下なら `base` は削除）
+2. `public/robots.txt` の Sitemap URL
+3. `public/CNAME` を新規作成してドメイン名を書く
 
-構造化データ (`ResearchOrganization` JSON-LD)、canonical、hreflang、OGP は `src/layouts/Layout.astro` で出力済み。
+`base` を変えると全ページのリンクが変わる。変更後は必ず `npm run build` して
+`dist/` 内のリンク切れを確認すること。
+
+---
+
+## SEO
+
+`src/layouts/Layout.astro` が canonical / hreflang / OGP / `ResearchOrganization` の
+JSON-LD を出力している。ページを追加しても自動で付く。
+
+**旧 Google Sites がまだ検索上位にあるため、完全移行するときは:**
+
+1. Google Search Console に新サイトを登録し `sitemap-index.xml` を送信
+2. Google Sites には自動リダイレクトが設定できないので、各ページ冒頭に移転告知リンクを手動設置
+3. Google Scholar・researchmap・学内ディレクトリなど外部からの参照 URL を更新
+4. 順位が安定するまで旧サイトは消さない
+
+現状は `kentaroy47.github.io` ドメインなので、SEO 上は `keio.jp` 配下のカスタムドメインに
+移した方が有利。
+
+---
+
+## 変更後の確認
+
+```
+npm run build
+```
+
+が通ることを最低限確認する。加えて見るとよい点:
+
+- 日英**両方**のページを開く（英語版だけ文言が抜けているミスが起きやすい）
+- モバイル幅（375px 程度）で崩れていないか
+- `dist/` 内に `undefined` や `[object Object]` が出ていないか
+- 内部リンクが切れていないか（`base` を変えた直後は特に）
+
+---
 
 ## Astro docs
 
 - [Routing](https://docs.astro.build/en/guides/routing/)
-- [Components](https://docs.astro.build/en/basics/astro-components/)
+- [Content collections](https://docs.astro.build/en/guides/content-collections/)
 - [Images](https://docs.astro.build/en/guides/images/)
 - [i18n](https://docs.astro.build/en/guides/internationalization/)
