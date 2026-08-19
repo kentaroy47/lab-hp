@@ -114,6 +114,21 @@ English description here. 英語版ページの本文になる。Markdown が使
 
 **ティーザー画像は用意しなくてよい。** `src/components/ProjectTeaser.astro` が
 カテゴリ・学会名・年・短縮タイトルからサイトの配色で SVG を描画する。
+
+**arXiv リンクがあるプロジェクトは、詳細ページに論文の Figure 1 を自動で載せられる。**
+
+```
+pip install pymupdf pillow
+python scripts/fetch-figures.py src/content/projects src/assets/figures
+```
+
+キャプション「Fig. 1」の位置から図の領域を計算し、高解像度でレンダリングする
+（埋め込み画像を抜くのではないので、ベクタの注釈や複数パネルも欠けない）。
+取得できたら `src/data/paperFigures.ts` に1行追加する。図が見つからない論文は
+スキップされ、生成ティーザーにフォールバックするだけなので失敗しても壊れない。
+
+**一覧カードは常に生成ティーザー。** 論文の図は白背景・高密度で縦横比もバラバラなため、
+カード幅（約380px）では判読できず統一感も崩れる。大きく出せる詳細ページに限って使う。
 上流由来の `teaser:` フィールドと `public/projects/*.svg` は互換のため残してあるが、
 描画には使っていない（上流のティーザーはダークテーマで、この暖色系サイトから浮くため）。
 

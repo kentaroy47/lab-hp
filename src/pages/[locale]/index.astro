@@ -309,8 +309,10 @@ const description = ja
   <section class="mx-auto max-w-6xl px-5 pb-24">
     <div class="reveal relative overflow-hidden rounded-[2rem] bg-navy-800 px-8 py-14 md:px-14 md:py-16">
       <div class="trace-grid absolute inset-0 opacity-30"></div>
-      <div class="absolute -right-12 -top-20 hidden w-80 opacity-90 lg:block">
-        <Image src={healthVisual} alt="" widths={[320, 640]} sizes="320px" class="animate-float w-full" />
+      <!-- Anchored to the bottom so the figure's head stays inside the card; the
+           circuit base it stands on is what runs off the edge. -->
+      <div class="absolute -bottom-6 right-2 hidden w-60 opacity-90 lg:block xl:w-64">
+        <Image src={healthVisual} alt="" widths={[260, 520]} sizes="260px" class="animate-float w-full" />
       </div>
 
       <div class="relative max-w-2xl">
