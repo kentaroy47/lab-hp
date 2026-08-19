@@ -3,169 +3,259 @@ import type { ProjectCategory } from "../data/projectCategories";
 
 /**
  * Teasers are drawn from project metadata rather than shipped as files, so every
- * card sits in the site's warm palette and a new project gets artwork for free.
- * Each category has its own motif: circuit traces, a spoofed LiDAR fan, or a
- * point-cloud sweep.
+ * card sits in the site's palette and a new project gets artwork for free.
+ *
+ * Deliberately wordless — the card prints venue, year and title right beneath,
+ * so text here only duplicated it. The motif is isometric to echo the lab's own
+ * hand-drawn illustrations, which all sit on isometric circuit boards: a chip
+ * die, a spoofed LiDAR sweep, or a scanned point cloud, each on the same board.
  */
 interface Props {
-  title: string;
-  venue: string;
-  year: number;
   category: ProjectCategory;
   /** Distinct projects in a category should not draw identical artwork. */
   seed: string;
   class?: string;
 }
 
-const { title, venue, year, category, seed, class: className = "" } = Astro.props;
+const { category, seed, class: className = "" } = Astro.props;
 
-const palette: Record<ProjectCategory, { wash: string; ink: string; accent: string; faint: string }> = {
-  computing: { wash: "#eaf2fa", ink: "#274370", accent: "#e87e52", faint: "#a5cceb" },
-  security: { wash: "#fdeee6", ink: "#1b2f52", accent: "#d4653a", faint: "#f6b294" },
-  sensing: { wash: "#fdf3e0", ink: "#274370", accent: "#e8b155", faint: "#f7d9a0" },
+const palette: Record<
+  ProjectCategory,
+  { sky: string; board: string; boardDark: string; edge: string; trace: string; accent: string; glow: string }
+> = {
+  computing: {
+    sky: "#dceaf7",
+    board: "#2a4a78",
+    boardDark: "#16294a",
+    edge: "#0f1e38",
+    trace: "#7fb2dd",
+    accent: "#f09a75",
+    glow: "#f3c878",
+  },
+  security: {
+    sky: "#fbe0d2",
+    board: "#33517d",
+    boardDark: "#1b2f52",
+    edge: "#111f3a",
+    trace: "#8fbee8",
+    accent: "#e8562f",
+    glow: "#f6b294",
+  },
+  sensing: {
+    sky: "#fbe9cb",
+    board: "#27476f",
+    boardDark: "#152945",
+    edge: "#0e1c33",
+    trace: "#a5cceb",
+    accent: "#f3c878",
+    glow: "#f7d9a0",
+  },
 };
 const c = palette[category];
 
-// A stable pseudo-random stream so each project's motif differs but never shifts between builds.
+// Stable pseudo-random stream: each project differs, but never shifts between builds.
 let n = [...seed].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7);
 const rand = () => ((n = (n * 1664525 + 1013904223) >>> 0) / 2 ** 32);
 
-const traces = Array.from({ length: 7 }, (_, i) => ({
-  y: 60 + i * 34,
-  turn: 150 + Math.floor(rand() * 190),
-  drop: rand() > 0.5,
-}));
+/** 2:1 isometric projection. z lifts a point off the board. */
+const CX = 400;
+const CY = 232;
+const S = 186;
+const iso = (x: number, y: number, z = 0): [number, number] => [
+  CX + (x - y) * 0.866 * S,
+  CY + (x + y) * 0.5 * S - z * S,
+];
+const pt = (x: number, y: number, z = 0) => iso(x, y, z).map((v) => v.toFixed(1)).join(",");
+const poly = (corners: [number, number, number?][]) => corners.map(([x, y, z]) => pt(x, y, z ?? 0)).join(" ");
 
-const rays = Array.from({ length: 11 }, (_, i) => {
-  const angle = -46 + i * 9.2;
-  return { angle, ghost: i === 3 + Math.floor(rand() * 4) };
+const THICK = 0.09;
+const board = poly([[-1, -1], [1, -1], [1, 1], [-1, 1]]);
+const sideL = poly([[-1, 1], [1, 1], [1, 1, -THICK], [-1, 1, -THICK]]);
+const sideR = poly([[1, 1], [1, -1], [1, -1, -THICK], [1, 1, -THICK]]);
+
+/** Traces running across the board surface toward the die. */
+const traces = Array.from({ length: 9 }, (_, i) => {
+  const t = -0.88 + (i * 1.76) / 8;
+  const turn = -0.15 + rand() * 0.3;
+  return { t, turn, flip: rand() > 0.5 };
 });
 
-const cloud = Array.from({ length: 74 }, () => {
-  const t = rand();
-  const arc = 0.55 + rand() * 0.42;
+/**
+ * Rays fanning from the sensor across the board. Endpoints are clamped to the
+ * board so nothing — least of all a ghost marker — ends up floating in the sky.
+ */
+const RAY_ORIGIN: [number, number] = [-0.72, -0.72];
+const EDGE = 0.94;
+const rayEnd = (dx: number, dy: number, reach: number): [number, number] => {
+  const [ox, oy] = RAY_ORIGIN;
+  const tx = dx > 0 ? (EDGE - ox) / dx : dx < 0 ? (-EDGE - ox) / dx : Infinity;
+  const ty = dy > 0 ? (EDGE - oy) / dy : dy < 0 ? (-EDGE - oy) / dy : Infinity;
+  const t = Math.min(tx, ty) * reach;
+  return [ox + dx * t, oy + dy * t];
+};
+
+const rayCount = 15;
+const ghosts = new Set([3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 3)]);
+const rays = Array.from({ length: rayCount }, (_, i) => {
+  // Sweep a quarter turn, so the fan opens across the board from its corner.
+  const angle = (i / (rayCount - 1)) * (Math.PI / 2);
   return {
-    x: 330 + Math.cos(Math.PI * (1.15 + t * 0.7)) * 250 * arc,
-    y: 215 + Math.sin(Math.PI * (1.15 + t * 0.7)) * 165 * arc,
-    r: 1.6 + rand() * 3.1,
-    o: 0.25 + rand() * 0.6,
+    dx: Math.cos(angle),
+    dy: Math.sin(angle),
+    reach: 0.78 + rand() * 0.22,
+    ghost: ghosts.has(i),
   };
 });
 
-// Scale the caption to the title rather than clipping it — only absurd lengths truncate.
-const titleSize = title.length <= 18 ? 42 : title.length <= 24 ? 36 : title.length <= 33 ? 30 : 25;
-const displayTitle = title.length > 42 ? `${title.slice(0, 41)}…` : title;
+/** Points floating above the board, denser near the sensor. */
+const cloud = Array.from({ length: 120 }, () => {
+  const a = rand() * Math.PI * 2;
+  const r = Math.pow(rand(), 0.55) * 0.95;
+  return {
+    x: Math.cos(a) * r,
+    y: Math.sin(a) * r,
+    z: 0.04 + rand() * 0.42,
+    s: 3.4 - r * 1.6,
+    o: 0.9 - r * 0.45,
+  };
+});
 ---
 
 <svg viewBox="0 0 800 450" class={className} role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id={`wash-${seed}`} x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color={c.wash} />
+    <linearGradient id={`sky-${seed}`} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color={c.sky} />
       <stop offset="100%" stop-color="#fffdf9" />
     </linearGradient>
+    <linearGradient id={`board-${seed}`} x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color={c.board} />
+      <stop offset="100%" stop-color={c.boardDark} />
+    </linearGradient>
+    <radialGradient id={`glow-${seed}`} cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color={c.glow} stop-opacity="0.85" />
+      <stop offset="100%" stop-color={c.glow} stop-opacity="0" />
+    </radialGradient>
     <clipPath id={`clip-${seed}`}><rect width="800" height="450" /></clipPath>
+    <!-- Keeps traces, rings and rays on the board rather than spilling into the sky. -->
+    <clipPath id={`board-clip-${seed}`}><polygon points={board} /></clipPath>
   </defs>
 
-  <rect width="800" height="450" fill={`url(#wash-${seed})`} />
+  <rect width="800" height="450" fill={`url(#sky-${seed})`} />
 
-  <g clip-path={`url(#clip-${seed})`} opacity="0.85">
+  <g clip-path={`url(#clip-${seed})`}>
+    <!-- The board every motif stands on -->
+    <polygon points={sideL} fill={c.edge} />
+    <polygon points={sideR} fill={c.edge} opacity="0.82" />
+    <polygon points={board} fill={`url(#board-${seed})`} />
+
     {category === "computing" && (
-      <g stroke={c.faint} fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-        {traces.map((t) => (
-          <path
-            d={`M-10 ${t.y} H${t.turn} L${t.turn + 26} ${t.drop ? t.y + 26 : t.y - 26} H560`}
-            opacity="0.75"
-          />
-        ))}
-        {traces.map((t) => (
-          <circle cx={t.turn} cy={t.y} r="4.5" fill={c.faint} stroke="none" opacity="0.9" />
-        ))}
-        <rect x="566" y="150" width="150" height="150" rx="14" fill={c.wash} stroke={c.accent} stroke-width="3" />
-        <rect x="606" y="190" width="70" height="70" rx="7" fill={c.accent} stroke="none" opacity="0.28" />
-        {[0, 1, 2, 3].map((i) => (
-          <>
-            <path d={`M${592 + i * 34} 150 V126`} stroke={c.accent} opacity="0.7" />
-            <path d={`M${592 + i * 34} 300 V324`} stroke={c.accent} opacity="0.7" />
-            <path d={`M566 ${176 + i * 34} H542`} stroke={c.accent} opacity="0.7" />
-            <path d={`M716 ${176 + i * 34} H740`} stroke={c.accent} opacity="0.7" />
-          </>
-        ))}
+      <g>
+        <g clip-path={`url(#board-clip-${seed})`}>
+          <g stroke={c.trace} stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.65">
+            {traces.map((t) => (
+              <polyline
+                points={
+                  t.flip
+                    ? `${pt(-0.98, t.t)} ${pt(t.turn, t.t)} ${pt(t.turn, t.t * 0.28)} ${pt(-0.34, t.t * 0.28)}`
+                    : `${pt(t.t, -0.98)} ${pt(t.t, t.turn)} ${pt(t.t * 0.28, t.turn)} ${pt(t.t * 0.28, -0.34)}`
+                }
+              />
+            ))}
+          </g>
+          {traces.map((t) => (
+            <circle
+              cx={t.flip ? iso(t.turn, t.t)[0] : iso(t.t, t.turn)[0]}
+              cy={t.flip ? iso(t.turn, t.t)[1] : iso(t.t, t.turn)[1]}
+              r="4.5"
+              fill={c.trace}
+            />
+          ))}
+        </g>
+
+        <!-- Glow sits behind the die, not over it -->
+        <ellipse cx={iso(0, 0, 0.1)[0]} cy={iso(0, 0, 0.1)[1]} rx="168" ry="96" fill={`url(#glow-${seed})`} opacity="0.55" />
+
+        <!-- Die, raised off the board -->
+        <polygon points={poly([[-0.34, 0.34, 0.2], [0.34, 0.34, 0.2], [0.34, 0.34], [-0.34, 0.34]])} fill={c.edge} />
+        <polygon points={poly([[0.34, 0.34, 0.2], [0.34, -0.34, 0.2], [0.34, -0.34], [0.34, 0.34]])} fill={c.boardDark} />
+        <polygon points={poly([[-0.34, -0.34, 0.2], [0.34, -0.34, 0.2], [0.34, 0.34, 0.2], [-0.34, 0.34, 0.2]])} fill={c.accent} />
+        <polygon
+          points={poly([[-0.19, -0.19, 0.2], [0.19, -0.19, 0.2], [0.19, 0.19, 0.2], [-0.19, 0.19, 0.2]])}
+          fill={c.edge}
+          opacity="0.32"
+        />
       </g>
     )}
 
     {category === "security" && (
       <g>
-        {rays.map((r) => (
-          <path
-            d={`M120 225 L${120 + Math.cos((r.angle * Math.PI) / 180) * 690} ${225 + Math.sin((r.angle * Math.PI) / 180) * 690}`}
-            stroke={r.ghost ? c.accent : c.faint}
-            stroke-width={r.ghost ? 3.4 : 2}
-            stroke-linecap="round"
-            opacity={r.ghost ? 0.95 : 0.5}
-            stroke-dasharray={r.ghost ? "16 11" : undefined}
-          />
-        ))}
-        <circle cx="120" cy="225" r="26" fill={c.wash} stroke={c.ink} stroke-width="3" />
-        <circle cx="120" cy="225" r="9" fill={c.ink} />
+        <g stroke-linecap="round">
+          {rays.map((r) => {
+            const [x1, y1] = iso(...RAY_ORIGIN, 0.13);
+            const [ex, ey] = rayEnd(r.dx, r.dy, r.reach);
+            const [x2, y2] = iso(ex, ey, 0.02);
+            return (
+              <line
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke={r.ghost ? c.accent : c.trace}
+                stroke-width={r.ghost ? 4.5 : 2.2}
+                opacity={r.ghost ? 0.95 : 0.4}
+                stroke-dasharray={r.ghost ? "18 12" : undefined}
+              />
+            );
+          })}
+        </g>
+
         {rays
           .filter((r) => r.ghost)
-          .map((r) => (
-            <circle
-              cx={120 + Math.cos((r.angle * Math.PI) / 180) * 430}
-              cy={225 + Math.sin((r.angle * Math.PI) / 180) * 430}
-              r="17"
-              fill={c.accent}
-              opacity="0.5"
-            />
-          ))}
+          .map((r) => {
+            const [ex, ey] = rayEnd(r.dx, r.dy, r.reach);
+            const [gx, gy] = iso(ex, ey, 0.16);
+            const [bx, by] = iso(ex, ey, 0.02);
+            return (
+              <g>
+                <ellipse cx={gx} cy={gy} rx="70" ry="42" fill={`url(#glow-${seed})`} />
+                <line x1={gx} y1={gy} x2={bx} y2={by} stroke={c.accent} stroke-width="2" opacity="0.45" />
+                <circle cx={gx} cy={gy} r="13" fill={c.accent} />
+              </g>
+            );
+          })}
+
+        <!-- Sensor unit -->
+        <polygon points={poly([[-0.86, -0.58, 0.13], [-0.58, -0.58, 0.13], [-0.58, -0.58], [-0.86, -0.58]])} fill={c.edge} />
+        <polygon points={poly([[-0.58, -0.58, 0.13], [-0.58, -0.86, 0.13], [-0.58, -0.86], [-0.58, -0.58]])} fill={c.boardDark} />
+        <polygon
+          points={poly([[-0.86, -0.86, 0.13], [-0.58, -0.86, 0.13], [-0.58, -0.58, 0.13], [-0.86, -0.58, 0.13]])}
+          fill={c.trace}
+        />
+        <circle cx={iso(-0.72, -0.72, 0.13)[0]} cy={iso(-0.72, -0.72, 0.13)[1]} r="7" fill={c.edge} />
       </g>
     )}
 
     {category === "sensing" && (
       <g>
-        {[0.42, 0.62, 0.82, 1.02].map((k) => (
-          <ellipse
-            cx="330"
-            cy="215"
-            rx={250 * k}
-            ry={165 * k}
-            fill="none"
-            stroke={c.faint}
-            stroke-width="2"
-            opacity="0.55"
-          />
-        ))}
-        {cloud.map((p) => (
-          <circle cx={p.x} cy={p.y} r={p.r} fill={c.accent} opacity={p.o} />
-        ))}
-        <circle cx="330" cy="215" r="13" fill={c.ink} />
+        <g clip-path={`url(#board-clip-${seed})`} fill="none" stroke={c.trace} stroke-width="2.4" opacity="0.45">
+          {[0.3, 0.52, 0.74, 0.96].map((r) => (
+            <ellipse cx={iso(0, 0)[0]} cy={iso(0, 0)[1]} rx={r * S * 1.73} ry={r * S} />
+          ))}
+        </g>
+
+        <ellipse cx={iso(0, 0, 0.14)[0]} cy={iso(0, 0, 0.14)[1]} rx="150" ry="88" fill={`url(#glow-${seed})`} opacity="0.6" />
+
+        {cloud.map((p) => {
+          const [x, y] = iso(p.x, p.y, p.z);
+          return <circle cx={x} cy={y} r={p.s} fill={c.accent} opacity={p.o} />;
+        })}
+        <polygon points={poly([[-0.13, 0.13, 0.16], [0.13, 0.13, 0.16], [0.13, 0.13], [-0.13, 0.13]])} fill={c.edge} />
+        <polygon points={poly([[0.13, 0.13, 0.16], [0.13, -0.13, 0.16], [0.13, -0.13], [0.13, 0.13]])} fill={c.boardDark} />
+        <polygon
+          points={poly([[-0.13, -0.13, 0.16], [0.13, -0.13, 0.16], [0.13, 0.13, 0.16], [-0.13, 0.13, 0.16]])}
+          fill={c.trace}
+        />
       </g>
     )}
   </g>
-
-  <!-- Legibility wash behind the caption -->
-  <rect x="0" y="292" width="800" height="158" fill="#fffdf9" opacity="0.9" />
-
-  <text
-    x="52"
-    y="352"
-    font-family="ui-monospace, SFMono-Regular, monospace"
-    font-size="21"
-    font-weight="600"
-    fill={c.accent}
-    letter-spacing="1.5"
-  >
-    {venue} {year}
-  </text>
-  <text
-    x="52"
-    y="408"
-    font-family="Inter, system-ui, -apple-system, sans-serif"
-    font-size="42"
-    font-weight="800"
-    fill={c.ink}
-    letter-spacing="-0.8"
-  >
-    {displayTitle}
-  </text>
 </svg>

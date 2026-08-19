@@ -120,9 +120,6 @@ const description = ja
               <a href={`${base}/${locale}/projects/${p.id}`} class="block">
                 <div class="aspect-16/9 overflow-hidden border-b border-navy-900/8">
                   <ProjectTeaser
-                    title={p.data.short_title}
-                    venue={p.data.venue}
-                    year={p.data.year}
                     category={categoryOf(p)}
                     seed={p.id}
                     class="h-full w-full transition-transform duration-500 group-hover:scale-105"
