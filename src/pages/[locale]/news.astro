@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
 import { news, newsTagLabels } from "../../data/news";
 import { locales, type Locale } from "../../i18n/strings";
 
@@ -49,6 +50,22 @@ const description = ja
                 )}
               </div>
               <p class="mt-2.5 text-sm leading-relaxed text-navy-700">{ja ? item.ja : item.en}</p>
+
+              {item.links && (
+                <div class="mt-3 flex flex-wrap gap-2">
+                  {item.links.map((l) => (
+                    <a
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-paper-200 px-2.5 py-1.5 text-xs font-bold text-navy-700 transition-colors hover:bg-coral-300/40 hover:text-coral-600"
+                    >
+                      {l.label}
+                      <Icon name="external" class="h-3 w-3" />
+                    </a>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
         </ul>
