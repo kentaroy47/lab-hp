@@ -1,16 +1,30 @@
 ---
+/**
+ * GitHub Pages serves static files only, so the site root can't issue a 301.
+ * A meta refresh stands in, but the page still carries a canonical and the full
+ * hreflang set so search engines index the Japanese page rather than this stub.
+ */
+import { site } from "../data/site";
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const target = `${base}/ja`;
+const abs = (p: string) => new URL(`${base}${p}`, Astro.site).href;
+const target = abs("/ja");
 ---
 
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <title>{site.titleJa}</title>
+    <meta name="description" content={site.tagline.ja} />
     <link rel="canonical" href={target} />
-    <title>Keio Computing and Sensing Group</title>
+    <link rel="alternate" hreflang="ja" href={target} />
+    <link rel="alternate" hreflang="en" href={abs("/en")} />
+    <link rel="alternate" hreflang="x-default" href={target} />
+    <link rel="icon" href={`${base}/csg.png`} type="image/png" />
   </head>
   <body>
-    <a href={target}>Keio Computing and Sensing Group</a>
+    <p><a href={target}>{site.titleJa}</a></p>
   </body>
 </html>

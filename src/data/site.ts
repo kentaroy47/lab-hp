@@ -12,6 +12,8 @@ export const site = {
   },
   pi: "Kentaro (Ken) Yoshioka",
   email: "kyoshioka47@keio.jp",
+  /** GA4 measurement ID. Only loaded in production builds, so local work isn't counted. */
+  analyticsId: "G-PH39LDXF6T",
   address: {
     postal: "〒223-8522",
     ja: "神奈川県横浜市港北区日吉３丁目１４−１　矢上キャンパス23棟",

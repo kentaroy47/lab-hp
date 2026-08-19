@@ -18,6 +18,8 @@ const siteName = locale === "ja" ? site.titleJa : site.titleEn;
 const fullTitle = path === "" ? siteName : `${title} | ${site.shortName}`;
 const canonical = new URL(`${base}/${locale}${path}`, Astro.site);
 const alt = new URL(`${base}/${otherLocale(locale)}${path}`, Astro.site);
+/** Japanese is the default locale, so it answers for unmatched languages. */
+const defaultHref = new URL(`${base}/ja${path}`, Astro.site).href;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -48,6 +50,8 @@ const jsonLd = {
     <link rel="canonical" href={canonical.href} />
     <link rel="alternate" hreflang={locale} href={canonical.href} />
     <link rel="alternate" hreflang={otherLocale(locale)} href={alt.href} />
+    <!-- Tells search engines which version to serve a visitor whose locale matches neither. -->
+    <link rel="alternate" hreflang="x-default" href={defaultHref} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={fullTitle} />
@@ -68,6 +72,26 @@ const jsonLd = {
         .reveal { opacity: 1 !important; transform: none !important; }
       </style>
     </noscript>
+
+    {
+      /* Google Analytics, production only — dev and preview traffic would otherwise
+         pollute the numbers. `is:inline` keeps gtag out of Astro's bundle, which it
+         requires to register on window. */
+      import.meta.env.PROD && (
+        <>
+          <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${site.analyticsId}`} />
+          <script
+            is:inline
+            set:html={`
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${site.analyticsId}');
+`}
+          />
+        </>
+      )
+    }
   </head>
   <body class="min-h-screen antialiased">
     <Header locale={locale} path={path} />
