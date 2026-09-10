@@ -19,29 +19,62 @@ interface Props {
 
 const { category, seed, class: className = "" } = Astro.props;
 
-const base: Record<ProjectCategory, { sky: string; board: string; boardDark: string; edge: string; trace: string }> = {
-  computing: { sky: "#dceaf7", board: "#2a4a78", boardDark: "#16294a", edge: "#0f1e38", trace: "#7fb2dd" },
-  security: { sky: "#fbe0d2", board: "#33517d", boardDark: "#1b2f52", edge: "#111f3a", trace: "#8fbee8" },
-  sensing: { sky: "#fbe9cb", board: "#27476f", boardDark: "#152945", edge: "#0e1c33", trace: "#a5cceb" },
-};
+/** Sky tints, spread wide so neighbouring cards differ in colour before anything else. */
+const skies = ["#dceaf7", "#fbe0d2", "#fbe9cb", "#e6e9f6", "#fdeadf", "#e4f0f4", "#f6e7f0", "#eef1dd"];
 
-/** Accents spread across the warm range so neighbouring cards differ at a glance. */
+/** Board tones: the largest shape on the card, so it cannot be one colour everywhere. */
+const boards = [
+  { board: "#2a4a78", boardDark: "#16294a", edge: "#0f1e38", trace: "#7fb2dd" },
+  { board: "#33517d", boardDark: "#1b2f52", edge: "#111f3a", trace: "#8fbee8" },
+  { board: "#27476f", boardDark: "#152945", edge: "#0e1c33", trace: "#a5cceb" },
+  { board: "#3d4a70", boardDark: "#232a47", edge: "#161a2f", trace: "#9fb4e0" },
+  { board: "#20455f", boardDark: "#12293a", edge: "#0b1b27", trace: "#8ec6dd" },
+];
+
+/** Accents spread across the warm range. */
 const accents = ["#e87e52", "#f3c878", "#e8562f", "#f09a75", "#e8b155"];
 
 // Stable pseudo-random stream: each project differs, but never shifts between builds.
 let n = [...seed].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7);
 const rand = () => ((n = (n * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+const pickFrom = (xs) => xs[Math.floor(rand() * xs.length)];
 
-const c = base[category];
-const accent = accents[Math.floor(rand() * accents.length)];
-const glowColours = ["#f3c878", "#f7d9a0", "#f6b294"];
-const glow = glowColours[Math.floor(rand() * glowColours.length)];
+const sky = pickFrom(skies);
+const c = pickFrom(boards);
+const accent = pickFrom(accents);
+const glow = pickFrom(["#f3c878", "#f7d9a0", "#f6b294"]);
 const variant = Math.floor(rand() * 4);
 
 /** 2:1 isometric projection. z lifts a point off the board. */
-const CX = 400;
-const CY = 236;
-const S = 182;
+/** Sensor placements and fan widths, so security boards aren't all one shape. */
+const sensorSetups: { origin: [number, number]; from: number; to: number; count: number; ghosts: number }[] = [
+  { origin: [-0.72, -0.72], from: 0, to: 90, count: 15, ghosts: 2 },
+  { origin: [-0.86, 0.1], from: -46, to: 46, count: 11, ghosts: 1 },
+  { origin: [0.1, -0.86], from: 34, to: 138, count: 17, ghosts: 3 },
+  { origin: [-0.72, -0.72], from: 12, to: 74, count: 9, ghosts: 2 },
+];
+
+/** Where the sweep is centred; also the focal point for framing. */
+const scanCentre: [number, number] = variant % 2 === 0 ? [0, 0] : [-0.28, -0.1];
+
+const S = [168, 205, 245, 288][Math.floor(rand() * 4)];
+// Off-centre framings let the board bleed past an edge, changing the silhouette.
+let CX = 400 + (rand() - 0.5) * (S > 220 ? 150 : 70);
+let CY = 236 + (rand() - 0.5) * (S > 220 ? 90 : 44);
+
+/**
+ * The sensor cube and scan head are the subject of their motifs, and a close crop
+ * can slice them at the frame edge. Nudge the framing so the focal point stays in
+ * view. Done here, before anything is projected, so the board moves with it.
+ */
+const focal: [number, number, number] =
+  category === "security" ? [...sensorSetups[variant].origin, 0.13] :
+  category === "sensing" ? [...scanCentre, 0.16] : [0, 0, 0.2];
+const MARGIN = 78;
+const offX = (focal[0] - focal[1]) * 0.866 * S;
+const offY = (focal[0] + focal[1]) * 0.5 * S - focal[2] * S;
+CX = Math.min(Math.max(CX, MARGIN - offX), 800 - MARGIN - offX);
+CY = Math.min(Math.max(CY, MARGIN - offY), 450 - MARGIN - offY);
 const iso = (x: number, y: number, z = 0): [number, number] => [
   CX + (x - y) * 0.866 * S,
   CY + (x + y) * 0.5 * S - z * S,
@@ -112,13 +145,6 @@ const traces = Array.from({ length: traceCount }, (_, i) => {
   return { t, turn: -0.2 + rand() * 0.4, flip: rand() > 0.5 };
 });
 
-/** Sensor placements and fan widths, so security boards aren't all one shape. */
-const sensorSetups: { origin: [number, number]; from: number; to: number; count: number; ghosts: number }[] = [
-  { origin: [-0.72, -0.72], from: 0, to: 90, count: 15, ghosts: 2 },
-  { origin: [-0.86, 0.1], from: -46, to: 46, count: 11, ghosts: 1 },
-  { origin: [0.1, -0.86], from: 34, to: 138, count: 17, ghosts: 3 },
-  { origin: [-0.72, -0.72], from: 12, to: 74, count: 9, ghosts: 2 },
-];
 const setup = sensorSetups[variant];
 const EDGE = 0.94;
 const rayEnd = (dx: number, dy: number, reach: number): [number, number] => {
@@ -138,8 +164,6 @@ const rays = Array.from({ length: setup.count }, (_, i) => {
   return { dx: Math.cos(a), dy: Math.sin(a), reach: ghost ? 0.42 + rand() * 0.3 : 0.74 + rand() * 0.26, ghost };
 });
 
-/** Scan shapes: a full sweep or a directed lobe, centred on or off the board's middle. */
-const scanCentre: [number, number] = variant % 2 === 0 ? [0, 0] : [-0.28, -0.1];
 const arcStart = rand() * Math.PI * 2;
 const arcWidth = variant === 1 ? Math.PI * 0.75 : Math.PI * 2;
 const cloud = Array.from({ length: 90 + Math.floor(rand() * 90) }, () => {
@@ -155,6 +179,7 @@ const cloud = Array.from({ length: 90 + Math.floor(rand() * 90) }, () => {
 });
 const ringCount = 3 + Math.floor(rand() * 3);
 
+
 const sensorBox = boxFaces(setup.origin[0], setup.origin[1], 0.14, 0.13);
 const scanBox = boxFaces(scanCentre[0], scanCentre[1], 0.13, 0.16);
 // Painter's order: whatever sits furthest back is drawn first.
@@ -164,7 +189,7 @@ const orderedBoxes = [...boxes].sort((a, b) => a.cx + a.cy + a.z - (b.cx + b.cy 
 <svg viewBox="0 0 800 450" class={className} role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
   <defs>
     <linearGradient id={`sky-${seed}`} x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color={c.sky} />
+      <stop offset="0%" stop-color={sky} />
       <stop offset="100%" stop-color="#fffdf9" />
     </linearGradient>
     <linearGradient id={`board-${seed}`} x1="0%" y1="0%" x2="60%" y2="100%">
