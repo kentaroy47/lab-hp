@@ -1,9 +1,10 @@
 ---
 title: "Lights, Camera, Malfunction: When Illumination Robustness Leaves VLA Models Blind to Color"
 short_title: "FLARE & ChromaGuard"
-venue: arXiv
+venue: CoRL
 year: 2026
-status: preprint
+status: accepted
+highlight: true
 section: Sensor
 teaser: flare-chromaguard-teaser.svg
 authors:

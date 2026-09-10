@@ -340,7 +340,7 @@ export const publications: Publication[] = [
   {
     authors: "M. Watanabe, T. Sato, K. Yoshioka",
     title: "Lights, Camera, Malfunction: When Illumination Robustness Leaves VLA Models Blind to Color",
-    venue: "arXiv preprint", year: 2026, type: "conference", category: "sensing",
+    venue: "CoRL", year: 2026, type: "conference", category: "sensing", accRate: "33%",
     links: [{ label: "arXiv", href: "https://arxiv.org/abs/2607.14698" }],
   },
   {
@@ -363,7 +363,7 @@ export const publications: Publication[] = [
   {
     authors: "H. Bhupathiraju, T. Ishizue, N. Costagliola, O. Sako, K. Yoshioka, T. Sugawara, S. Rampazzi",
     title: "Illusion of Depth: Revealing Hidden Stereo Vision Vulnerabilities in Depth Estimation",
-    venue: "ACM CCS", year: 2026, type: "conference", category: "sensing",
+    venue: "ACM CCS", year: 2026, type: "conference", category: "sensing", accRate: "15%",
   },
   {
     authors: "K. Ikeda*, R. Hara*, R. Nagata, O. Sako, Z. Ding, T. Kado, I. Fujioka, T. Beppu, M. Isogawa, K. Yoshioka",

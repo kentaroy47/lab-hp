@@ -22,6 +22,8 @@ export const newsTagLabels: Record<NewsTag, { ja: string; en: string; cls: strin
 };
 
 export const news: NewsItem[] = [
+  { date: "2026-09", tag: "paper", ja: "渡辺さんのVLAセキュリティの研究が、ロボット学習のトップ学会 CoRL 2026 に採択されました！🎉", en: "Marino Watanabe's work on VLA security was accepted to CoRL 2026, a top venue in robot learning! 🎉", links: [{ label: "CoRL 2026", href: "https://www.corl.org/" }] },
+  { date: "2026-09", tag: "paper", ja: "佐古くんとフロリダ大・電通大との共同研究が、セキュリティのトップ学会 ACM CCS 2026 に採択されました！🎉", en: "Ozora Sako's collaboration with the University of Florida and UEC was accepted to ACM CCS 2026, a top security venue! 🎉", links: [{ label: "ACM CCS 2026", href: "https://www.sigsac.org/ccs/CCS2026/" }] },
   { date: "2026-08", tag: "award", ja: "吉田くんの研究がMIRU優秀学生賞を受賞しました🎉", en: "Ryo Yoshida received the MIRU Outstanding Student Award 🎉", links: [{ label: "MIRU優秀学生賞", href: "https://x.com/keiocsg/status/2085548388368744593" }] },
   { date: "2026-08", tag: "award", ja: "佐古くんとフロリダ大、電通大との共同研究がVehicleSec Best Demo Awardを受賞しました🎉", en: "Ozora Sako's collaboration with University of Florida and UEC won the VehicleSec Best Demo Award 🎉", links: [{ label: "受賞報告", href: "https://x.com/keiocsg/status/2088816673600266496" }] },
   { date: "2026-08", tag: "paper", ja: "Wenlunの Compute-in-ROM for LLM の論文が TCAS-I に採択されました！", en: "Wenlun's paper on Compute-in-ROM for LLMs was accepted to TCAS-I! Congrats!", links: [{ label: "TCAS-I", href: "https://ieeexplore.ieee.org/document/11649857" }] },
