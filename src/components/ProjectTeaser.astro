@@ -5,62 +5,43 @@ import type { ProjectCategory } from "../data/projectCategories";
  * Teasers are drawn from project metadata rather than shipped as files, so every
  * card sits in the site's palette and a new project gets artwork for free.
  *
- * Deliberately wordless — the card prints venue, year and title right beneath,
- * so text here only duplicated it. The motif is isometric to echo the lab's own
- * hand-drawn illustrations, which all sit on isometric circuit boards: a chip
- * die, a spoofed LiDAR sweep, or a scanned point cloud, each on the same board.
+ * Wordless on purpose: the card prints venue, year and title right beneath.
+ * Everything sits on an isometric board, echoing the lab's own hand-drawn
+ * illustrations — but each project picks a different composition and accent from
+ * its slug, because a grid of twenty-one near-identical boards reads as a bug.
  */
 interface Props {
   category: ProjectCategory;
-  /** Distinct projects in a category should not draw identical artwork. */
+  /** Distinct projects should not draw the same picture. */
   seed: string;
   class?: string;
 }
 
 const { category, seed, class: className = "" } = Astro.props;
 
-const palette: Record<
-  ProjectCategory,
-  { sky: string; board: string; boardDark: string; edge: string; trace: string; accent: string; glow: string }
-> = {
-  computing: {
-    sky: "#dceaf7",
-    board: "#2a4a78",
-    boardDark: "#16294a",
-    edge: "#0f1e38",
-    trace: "#7fb2dd",
-    accent: "#f09a75",
-    glow: "#f3c878",
-  },
-  security: {
-    sky: "#fbe0d2",
-    board: "#33517d",
-    boardDark: "#1b2f52",
-    edge: "#111f3a",
-    trace: "#8fbee8",
-    accent: "#e8562f",
-    glow: "#f6b294",
-  },
-  sensing: {
-    sky: "#fbe9cb",
-    board: "#27476f",
-    boardDark: "#152945",
-    edge: "#0e1c33",
-    trace: "#a5cceb",
-    accent: "#f3c878",
-    glow: "#f7d9a0",
-  },
+const base: Record<ProjectCategory, { sky: string; board: string; boardDark: string; edge: string; trace: string }> = {
+  computing: { sky: "#dceaf7", board: "#2a4a78", boardDark: "#16294a", edge: "#0f1e38", trace: "#7fb2dd" },
+  security: { sky: "#fbe0d2", board: "#33517d", boardDark: "#1b2f52", edge: "#111f3a", trace: "#8fbee8" },
+  sensing: { sky: "#fbe9cb", board: "#27476f", boardDark: "#152945", edge: "#0e1c33", trace: "#a5cceb" },
 };
-const c = palette[category];
+
+/** Accents spread across the warm range so neighbouring cards differ at a glance. */
+const accents = ["#e87e52", "#f3c878", "#e8562f", "#f09a75", "#e8b155"];
 
 // Stable pseudo-random stream: each project differs, but never shifts between builds.
 let n = [...seed].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7);
 const rand = () => ((n = (n * 1664525 + 1013904223) >>> 0) / 2 ** 32);
 
+const c = base[category];
+const accent = accents[Math.floor(rand() * accents.length)];
+const glowColours = ["#f3c878", "#f7d9a0", "#f6b294"];
+const glow = glowColours[Math.floor(rand() * glowColours.length)];
+const variant = Math.floor(rand() * 4);
+
 /** 2:1 isometric projection. z lifts a point off the board. */
 const CX = 400;
-const CY = 232;
-const S = 186;
+const CY = 236;
+const S = 182;
 const iso = (x: number, y: number, z = 0): [number, number] => [
   CX + (x - y) * 0.866 * S,
   CY + (x + y) * 0.5 * S - z * S,
@@ -73,52 +54,111 @@ const board = poly([[-1, -1], [1, -1], [1, 1], [-1, 1]]);
 const sideL = poly([[-1, 1], [1, 1], [1, 1, -THICK], [-1, 1, -THICK]]);
 const sideR = poly([[1, 1], [1, -1], [1, -1, -THICK], [1, 1, -THICK]]);
 
-/** Traces running across the board surface toward the die. */
-const traces = Array.from({ length: 9 }, (_, i) => {
-  const t = -0.88 + (i * 1.76) / 8;
-  const turn = -0.15 + rand() * 0.3;
-  return { t, turn, flip: rand() > 0.5 };
+/** An isometric cuboid: top face plus its two visible walls. */
+const boxFaces = (cx: number, cy: number, r: number, h: number, zBase = 0) => ({
+  front: poly([
+    [cx - r, cy + r, zBase + h],
+    [cx + r, cy + r, zBase + h],
+    [cx + r, cy + r, zBase],
+    [cx - r, cy + r, zBase],
+  ]),
+  right: poly([
+    [cx + r, cy + r, zBase + h],
+    [cx + r, cy - r, zBase + h],
+    [cx + r, cy - r, zBase],
+    [cx + r, cy + r, zBase],
+  ]),
+  top: poly([
+    [cx - r, cy - r, zBase + h],
+    [cx + r, cy - r, zBase + h],
+    [cx + r, cy + r, zBase + h],
+    [cx - r, cy + r, zBase + h],
+  ]),
 });
 
-/**
- * Rays fanning from the sensor across the board. Endpoints are clamped to the
- * board so nothing — least of all a ghost marker — ends up floating in the sky.
- */
-const RAY_ORIGIN: [number, number] = [-0.72, -0.72];
+interface Box {
+  cx: number;
+  cy: number;
+  r: number;
+  h: number;
+  z: number;
+  lit: boolean;
+}
+
+/** Chip layouts: one big die, a 2x2 array, a stack, or a die flanked by banks. */
+const chipLayouts: Box[][] = [
+  [{ cx: 0, cy: 0, r: 0.36, h: 0.2, z: 0, lit: true }],
+  [
+    { cx: -0.36, cy: -0.36, r: 0.22, h: 0.15, z: 0, lit: true },
+    { cx: 0.36, cy: -0.36, r: 0.22, h: 0.15, z: 0, lit: false },
+    { cx: -0.36, cy: 0.36, r: 0.22, h: 0.15, z: 0, lit: false },
+    { cx: 0.36, cy: 0.36, r: 0.22, h: 0.15, z: 0, lit: true },
+  ],
+  [
+    { cx: 0, cy: 0, r: 0.42, h: 0.1, z: 0, lit: false },
+    { cx: 0, cy: 0, r: 0.32, h: 0.1, z: 0.1, lit: false },
+    { cx: 0, cy: 0, r: 0.22, h: 0.1, z: 0.2, lit: true },
+  ],
+  [
+    { cx: 0, cy: 0, r: 0.3, h: 0.22, z: 0, lit: true },
+    { cx: -0.62, cy: 0, r: 0.14, h: 0.1, z: 0, lit: false },
+    { cx: 0.62, cy: 0, r: 0.14, h: 0.1, z: 0, lit: false },
+  ],
+];
+const boxes = chipLayouts[variant];
+const traceCount = 6 + Math.floor(rand() * 7);
+const traces = Array.from({ length: traceCount }, (_, i) => {
+  const t = -0.9 + (i * 1.8) / Math.max(1, traceCount - 1);
+  return { t, turn: -0.2 + rand() * 0.4, flip: rand() > 0.5 };
+});
+
+/** Sensor placements and fan widths, so security boards aren't all one shape. */
+const sensorSetups: { origin: [number, number]; from: number; to: number; count: number; ghosts: number }[] = [
+  { origin: [-0.72, -0.72], from: 0, to: 90, count: 15, ghosts: 2 },
+  { origin: [-0.86, 0.1], from: -46, to: 46, count: 11, ghosts: 1 },
+  { origin: [0.1, -0.86], from: 34, to: 138, count: 17, ghosts: 3 },
+  { origin: [-0.72, -0.72], from: 12, to: 74, count: 9, ghosts: 2 },
+];
+const setup = sensorSetups[variant];
 const EDGE = 0.94;
 const rayEnd = (dx: number, dy: number, reach: number): [number, number] => {
-  const [ox, oy] = RAY_ORIGIN;
+  const [ox, oy] = setup.origin;
   const tx = dx > 0 ? (EDGE - ox) / dx : dx < 0 ? (-EDGE - ox) / dx : Infinity;
   const ty = dy > 0 ? (EDGE - oy) / dy : dy < 0 ? (-EDGE - oy) / dy : Infinity;
   const t = Math.min(tx, ty) * reach;
   return [ox + dx * t, oy + dy * t];
 };
-
-const rayCount = 15;
-const ghosts = new Set([3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 3)]);
-const rays = Array.from({ length: rayCount }, (_, i) => {
-  // Sweep a quarter turn, so the fan opens across the board from its corner.
-  const angle = (i / (rayCount - 1)) * (Math.PI / 2);
-  return {
-    dx: Math.cos(angle),
-    dy: Math.sin(angle),
-    reach: 0.78 + rand() * 0.22,
-    ghost: ghosts.has(i),
-  };
+const ghostIdx = new Set<number>();
+while (ghostIdx.size < setup.ghosts) ghostIdx.add(1 + Math.floor(rand() * (setup.count - 2)));
+const rays = Array.from({ length: setup.count }, (_, i) => {
+  const deg = setup.from + (i * (setup.to - setup.from)) / (setup.count - 1);
+  const a = (deg * Math.PI) / 180;
+  const ghost = ghostIdx.has(i);
+  // A bloom needs room; ordinary rays may run to the edge.
+  return { dx: Math.cos(a), dy: Math.sin(a), reach: ghost ? 0.42 + rand() * 0.3 : 0.74 + rand() * 0.26, ghost };
 });
 
-/** Points floating above the board, denser near the sensor. */
-const cloud = Array.from({ length: 120 }, () => {
-  const a = rand() * Math.PI * 2;
-  const r = Math.pow(rand(), 0.55) * 0.95;
+/** Scan shapes: a full sweep or a directed lobe, centred on or off the board's middle. */
+const scanCentre: [number, number] = variant % 2 === 0 ? [0, 0] : [-0.28, -0.1];
+const arcStart = rand() * Math.PI * 2;
+const arcWidth = variant === 1 ? Math.PI * 0.75 : Math.PI * 2;
+const cloud = Array.from({ length: 90 + Math.floor(rand() * 90) }, () => {
+  const a = arcStart + rand() * arcWidth;
+  const r = Math.pow(rand(), 0.55) * 0.82;
   return {
-    x: Math.cos(a) * r,
-    y: Math.sin(a) * r,
-    z: 0.04 + rand() * 0.42,
-    s: 3.4 - r * 1.6,
+    x: scanCentre[0] + Math.cos(a) * r,
+    y: scanCentre[1] + Math.sin(a) * r,
+    z: 0.04 + rand() * 0.28,
+    s: 3.6 - r * 1.7,
     o: 0.9 - r * 0.45,
   };
 });
+const ringCount = 3 + Math.floor(rand() * 3);
+
+const sensorBox = boxFaces(setup.origin[0], setup.origin[1], 0.14, 0.13);
+const scanBox = boxFaces(scanCentre[0], scanCentre[1], 0.13, 0.16);
+// Painter's order: whatever sits furthest back is drawn first.
+const orderedBoxes = [...boxes].sort((a, b) => a.cx + a.cy + a.z - (b.cx + b.cy + b.z));
 ---
 
 <svg viewBox="0 0 800 450" class={className} role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
@@ -132,8 +172,8 @@ const cloud = Array.from({ length: 120 }, () => {
       <stop offset="100%" stop-color={c.boardDark} />
     </linearGradient>
     <radialGradient id={`glow-${seed}`} cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color={c.glow} stop-opacity="0.85" />
-      <stop offset="100%" stop-color={c.glow} stop-opacity="0" />
+      <stop offset="0%" stop-color={glow} stop-opacity="0.85" />
+      <stop offset="100%" stop-color={glow} stop-opacity="0" />
     </radialGradient>
     <clipPath id={`clip-${seed}`}><rect width="800" height="450" /></clipPath>
     <!-- Keeps traces, rings and rays on the board rather than spilling into the sky. -->
@@ -143,7 +183,6 @@ const cloud = Array.from({ length: 120 }, () => {
   <rect width="800" height="450" fill={`url(#sky-${seed})`} />
 
   <g clip-path={`url(#clip-${seed})`}>
-    <!-- The board every motif stands on -->
     <polygon points={sideL} fill={c.edge} />
     <polygon points={sideR} fill={c.edge} opacity="0.82" />
     <polygon points={board} fill={`url(#board-${seed})`} />
@@ -151,13 +190,13 @@ const cloud = Array.from({ length: 120 }, () => {
     {category === "computing" && (
       <g>
         <g clip-path={`url(#board-clip-${seed})`}>
-          <g stroke={c.trace} stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.65">
+          <g stroke={c.trace} stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6">
             {traces.map((t) => (
               <polyline
                 points={
                   t.flip
-                    ? `${pt(-0.98, t.t)} ${pt(t.turn, t.t)} ${pt(t.turn, t.t * 0.28)} ${pt(-0.34, t.t * 0.28)}`
-                    : `${pt(t.t, -0.98)} ${pt(t.t, t.turn)} ${pt(t.t * 0.28, t.turn)} ${pt(t.t * 0.28, -0.34)}`
+                    ? `${pt(-0.98, t.t)} ${pt(t.turn, t.t)} ${pt(t.turn, t.t * 0.3)} ${pt(0.98, t.t * 0.3)}`
+                    : `${pt(t.t, -0.98)} ${pt(t.t, t.turn)} ${pt(t.t * 0.3, t.turn)} ${pt(t.t * 0.3, 0.98)}`
                 }
               />
             ))}
@@ -172,18 +211,30 @@ const cloud = Array.from({ length: 120 }, () => {
           ))}
         </g>
 
-        <!-- Glow sits behind the die, not over it -->
-        <ellipse cx={iso(0, 0, 0.1)[0]} cy={iso(0, 0, 0.1)[1]} rx="168" ry="96" fill={`url(#glow-${seed})`} opacity="0.55" />
+        <ellipse cx={iso(0, 0, 0.08)[0]} cy={iso(0, 0, 0.08)[1]} rx="180" ry="104" fill={`url(#glow-${seed})`} opacity="0.5" />
 
-        <!-- Die, raised off the board -->
-        <polygon points={poly([[-0.34, 0.34, 0.2], [0.34, 0.34, 0.2], [0.34, 0.34], [-0.34, 0.34]])} fill={c.edge} />
-        <polygon points={poly([[0.34, 0.34, 0.2], [0.34, -0.34, 0.2], [0.34, -0.34], [0.34, 0.34]])} fill={c.boardDark} />
-        <polygon points={poly([[-0.34, -0.34, 0.2], [0.34, -0.34, 0.2], [0.34, 0.34, 0.2], [-0.34, 0.34, 0.2]])} fill={c.accent} />
-        <polygon
-          points={poly([[-0.19, -0.19, 0.2], [0.19, -0.19, 0.2], [0.19, 0.19, 0.2], [-0.19, 0.19, 0.2]])}
-          fill={c.edge}
-          opacity="0.32"
-        />
+        {orderedBoxes.map((b) => {
+          const f = boxFaces(b.cx, b.cy, b.r, b.h, b.z);
+          return (
+            <g>
+              <polygon points={f.front} fill={c.edge} />
+              <polygon points={f.right} fill={c.boardDark} />
+              <polygon points={f.top} fill={b.lit ? accent : c.trace} opacity={b.lit ? 1 : 0.75} />
+              {b.lit && b.r > 0.2 && (
+                <polygon
+                  points={poly([
+                    [b.cx - b.r * 0.55, b.cy - b.r * 0.55, b.z + b.h],
+                    [b.cx + b.r * 0.55, b.cy - b.r * 0.55, b.z + b.h],
+                    [b.cx + b.r * 0.55, b.cy + b.r * 0.55, b.z + b.h],
+                    [b.cx - b.r * 0.55, b.cy + b.r * 0.55, b.z + b.h],
+                  ])}
+                  fill={c.edge}
+                  opacity="0.3"
+                />
+              )}
+            </g>
+          );
+        })}
       </g>
     )}
 
@@ -191,7 +242,7 @@ const cloud = Array.from({ length: 120 }, () => {
       <g>
         <g stroke-linecap="round">
           {rays.map((r) => {
-            const [x1, y1] = iso(...RAY_ORIGIN, 0.13);
+            const [x1, y1] = iso(setup.origin[0], setup.origin[1], 0.13);
             const [ex, ey] = rayEnd(r.dx, r.dy, r.reach);
             const [x2, y2] = iso(ex, ey, 0.02);
             return (
@@ -200,9 +251,9 @@ const cloud = Array.from({ length: 120 }, () => {
                 y1={y1}
                 x2={x2}
                 y2={y2}
-                stroke={r.ghost ? c.accent : c.trace}
+                stroke={r.ghost ? accent : c.trace}
                 stroke-width={r.ghost ? 4.5 : 2.2}
-                opacity={r.ghost ? 0.95 : 0.4}
+                opacity={r.ghost ? 0.95 : 0.38}
                 stroke-dasharray={r.ghost ? "18 12" : undefined}
               />
             );
@@ -218,43 +269,57 @@ const cloud = Array.from({ length: 120 }, () => {
             return (
               <g>
                 <ellipse cx={gx} cy={gy} rx="70" ry="42" fill={`url(#glow-${seed})`} />
-                <line x1={gx} y1={gy} x2={bx} y2={by} stroke={c.accent} stroke-width="2" opacity="0.45" />
-                <circle cx={gx} cy={gy} r="13" fill={c.accent} />
+                <line x1={gx} y1={gy} x2={bx} y2={by} stroke={accent} stroke-width="2" opacity="0.45" />
+                <circle cx={gx} cy={gy} r="13" fill={accent} />
               </g>
             );
           })}
 
-        <!-- Sensor unit -->
-        <polygon points={poly([[-0.86, -0.58, 0.13], [-0.58, -0.58, 0.13], [-0.58, -0.58], [-0.86, -0.58]])} fill={c.edge} />
-        <polygon points={poly([[-0.58, -0.58, 0.13], [-0.58, -0.86, 0.13], [-0.58, -0.86], [-0.58, -0.58]])} fill={c.boardDark} />
-        <polygon
-          points={poly([[-0.86, -0.86, 0.13], [-0.58, -0.86, 0.13], [-0.58, -0.58, 0.13], [-0.86, -0.58, 0.13]])}
-          fill={c.trace}
+        <polygon points={sensorBox.front} fill={c.edge} />
+        <polygon points={sensorBox.right} fill={c.boardDark} />
+        <polygon points={sensorBox.top} fill={c.trace} />
+        <circle
+          cx={iso(setup.origin[0], setup.origin[1], 0.13)[0]}
+          cy={iso(setup.origin[0], setup.origin[1], 0.13)[1]}
+          r="7"
+          fill={c.edge}
         />
-        <circle cx={iso(-0.72, -0.72, 0.13)[0]} cy={iso(-0.72, -0.72, 0.13)[1]} r="7" fill={c.edge} />
       </g>
     )}
 
     {category === "sensing" && (
       <g>
-        <g clip-path={`url(#board-clip-${seed})`} fill="none" stroke={c.trace} stroke-width="2.4" opacity="0.45">
-          {[0.3, 0.52, 0.74, 0.96].map((r) => (
-            <ellipse cx={iso(0, 0)[0]} cy={iso(0, 0)[1]} rx={r * S * 1.73} ry={r * S} />
-          ))}
+        <g clip-path={`url(#board-clip-${seed})`} fill="none" stroke={c.trace} stroke-width="2.4" opacity="0.42">
+          {Array.from({ length: ringCount }, (_, i) => {
+            const k = 0.28 + (i * 0.7) / Math.max(1, ringCount - 1);
+            return (
+              <ellipse
+                cx={iso(scanCentre[0], scanCentre[1])[0]}
+                cy={iso(scanCentre[0], scanCentre[1])[1]}
+                rx={k * S * 1.73}
+                ry={k * S}
+              />
+            );
+          })}
         </g>
 
-        <ellipse cx={iso(0, 0, 0.14)[0]} cy={iso(0, 0, 0.14)[1]} rx="150" ry="88" fill={`url(#glow-${seed})`} opacity="0.6" />
+        <ellipse
+          cx={iso(scanCentre[0], scanCentre[1], 0.14)[0]}
+          cy={iso(scanCentre[0], scanCentre[1], 0.14)[1]}
+          rx="150"
+          ry="88"
+          fill={`url(#glow-${seed})`}
+          opacity="0.55"
+        />
 
         {cloud.map((p) => {
           const [x, y] = iso(p.x, p.y, p.z);
-          return <circle cx={x} cy={y} r={p.s} fill={c.accent} opacity={p.o} />;
+          return <circle cx={x} cy={y} r={p.s} fill={accent} opacity={p.o} />;
         })}
-        <polygon points={poly([[-0.13, 0.13, 0.16], [0.13, 0.13, 0.16], [0.13, 0.13], [-0.13, 0.13]])} fill={c.edge} />
-        <polygon points={poly([[0.13, 0.13, 0.16], [0.13, -0.13, 0.16], [0.13, -0.13], [0.13, 0.13]])} fill={c.boardDark} />
-        <polygon
-          points={poly([[-0.13, -0.13, 0.16], [0.13, -0.13, 0.16], [0.13, 0.13, 0.16], [-0.13, 0.13, 0.16]])}
-          fill={c.trace}
-        />
+
+        <polygon points={scanBox.front} fill={c.edge} />
+        <polygon points={scanBox.right} fill={c.boardDark} />
+        <polygon points={scanBox.top} fill={c.trace} />
       </g>
     )}
   </g>
